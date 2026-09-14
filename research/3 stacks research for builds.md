@@ -80,5 +80,5 @@ penting, sesuai untuk kebutuhan mini-task-tracker.
 
 ## Keputusan Akhir
 
-**Pilihan: Django + PostgreSQL.**
+**Pilihan: Laravel + PostgreSQL.**
 
