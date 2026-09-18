@@ -1,39 +1,42 @@
-# Product Requirements Document
+# Product Requirements Document Fix
 
 Muhammad Fauzan Zubaedi
 
 **1. Problem Statement**
-
-- Dalam berjalannya suatu perusahaan, diperlukan pengelolaan manajemen delegasi pekerjaan berupa projects atau tasks. Pengelolaannya seperti pembagian PIC tugas, prediksi durasi pengerjaan tugas, dan pengaturan tenggat terakhir tugas. Terdapat kebutuhan yang spesifik seperti tool ringkas yang cukup menyediakan inti fungsional saja, semudah menyusun dan membuat task, assign, atur tenggat, dan lacak status proses pengerjaan task.
+Dalam berjalannya suatu perusahaan, diperlukan pengelolaan manajemen delegasi pekerjaan berupa projects atau tasks. Pengelolaannya seperti pembagian PIC tugas, prediksi durasi pengerjaan tugas, dan pengaturan tenggat terakhir tugas. Terdapat kebutuhan spesifik terhadap tool ringkas yang menyediakan fungsi inti pengelolaan berbasis *Project* yang membawahi banyak *Task* di dalamnya, lengkap dengan pengaturan Hierarki Peran (Role-Based Access Control) yang ketat dan pencatatan riwayat aktivitas (Audit Trail) demi transparansi tim.
 
 **2. Target User**
-
-- Targer pengguna adalah tim dengan skala kecil hingga menengah (2-50 orang) yang membutuhkan pelacakan tugas dan pengelolaan manajemen delegasi pekerjaan yang ringkas. 
+Target pengguna adalah tim dengan skala kecil hingga menengah (2-50 orang) yang membutuhkan pelacakan proyek, tugas, dan manajemen delegasi yang ringkas, transparan, dan terstruktur.
 
 **3. Goals & Non-Goals**
 
-- **Goals:** Workspace, autentikasi dasar, task dengan keterangan title, status, assignee, due date, komentar, list view dengan filter & sort, dan dapat berjalan di platform website.
-- **Non Goals:** Multi Organization, SSO, rich text/mention user (@), kanban view, notifikasi, file attachment, notifikasi email & push, priority/labels/tags, emoji, dashboard analytics, timeline dengan infografis **Gantt-Chart Diagram**.
+- **Goals:** 
+  - Hierarki arsitektur berupa Project yang memiliki banyak Task.
+  - Autentikasi dan sistem Undangan (Invitation).
+  - RBAC tingkat sistem (Admin vs Member) dan tingkat Project (Manager vs Staff).
+  - Task dengan keterangan title, status, assignee, due date, dan komentar.
+  - Audit Trail (Activity Log) untuk melacak perubahan di tingkat Project maupun Task.
+  - List view dengan filter & sort yang berjalan di platform website.
+- **Non Goals:** Multi Organization, SSO, rich text/mention user (@), kanban view, file attachment, notifikasi email & push, priority/labels/tags, emoji, dashboard analytics, timeline infografis Gantt-Chart Diagram.
 
 **4. User Stories**
 
-- Sebagai user baru, saya bisa mendaftar akun, sehingga saya bisa mengakses tracker dengan aman.
-- Sebagai anggota tim, saya bisa membuat task dengan title, due date, dan assignee, sehingga pekerjaan jelas kepemilikannya.
-- Sebagai anggota tim, saya bisa mengubah status task, sehingga progres terlihat oleh tim.
-- Sebagai anggota tim, saya bisa menambahkan komentar di task, sehingga konteks/update tidak hilang.
-- Sebagai anggota tim, saya bisa memfilter task berdasarkan status/assignee, sehingga saya fokus ke pekerjaan relevan.
-- Sebagai anggota tim, saya bisa mengurutkan task berdasarkan due date, sehingga saya tahu prioritas.
+- Sebagai Admin, saya dapat mengundang pengguna baru ke sistem, agar anggota tim perusahaan dapat bergabung secara eksklusif.
+- Sebagai Manager, saya dapat membuat Project baru, sehingga tim dapat mulai merencanakan pekerjaan.
+- Sebagai Manager, saya dapat menambahkan Staff ke dalam Project, sehingga pembagian tugas menjadi spesifik.
+- Sebagai Manager/Staff di dalam project, saya bisa membuat dan mengelola task (title, due date, assignee), sehingga pekerjaan jelas kepemilikannya.
+- Sebagai Manager/Staff, saya bisa mengubah status task dan menambahkan komentar, sehingga progres terlihat oleh tim.
+- Sebagai Manager/Staff, saya dapat melihat *Activity Log* dari sebuah project dan task, sehingga saya mengetahui siapa yang melakukan perubahan terakhir.
+- Sebagai anggota project, saya bisa memfilter task berdasarkan status/assignee dan mengurutkannya, agar saya fokus ke pekerjaan prioritas.
 
 **5. MVP Feature List**
 
-- **P0 (Must):** Register/login, CRUD task, field title/status/assignee/due date, list view, filter by status. 
-- **P1 (Should):** Sort by due date, filter by assignee, komentar.
+- **P0 (Must):** Register melalui sistem undangan (token), CRUD Project, CRUD Task (berada di dalam project), Role-Based Access Control (Admin/Member & Manager/Staff), Activity Logging (Audit Trail), List view.
+- **P1 (Should):** Filter Task by status/assignee, Sort Task by due date, komentar pada Task.
 - **P2 (Nice):** Search by title sederhana.
 
 **6. Later Features**
-
-Kanban view, notifikasi, file attachment, multi-workspace, SSO, rich text.
+Kanban view, notifikasi in-app, file attachment, multi-workspace, rich text.
 
 **7. Success Criteria**
-
-Parameter sukses dinilai dari apabila user berhasil melakukan : register → buat task → assign → komentar → tandai selesai, tanpa error, dalam satu alur utuh. 
+Parameter sukses dinilai dari apabila user berhasil melakukan alur: Admin mengundang user → User mendaftar → Manager membuat Project → Manager menambahkan Staff → Manager/Staff membuat Task → melakukan interaksi (komentar/status) → Sistem berhasil mencatat aktivitas di menu Audit Trail tanpa error dalam satu urutuan utuh. 
