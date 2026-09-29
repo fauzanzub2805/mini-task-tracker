@@ -7,7 +7,7 @@
 - **Autentikasi (Auth):** Login/Register dasar
 - **Task Field:** Title, Assignee, Due Date, Status pengerjaan (Todo, In Progress, Done)
 - **Komentar:** Kolom komentar untuk setiap task/projects
-- **Tampilan:** List view, dengan sort dan filter dasar (by status, by assignee, by due date)
+- **Tampilan:** List view, dengan sort dan filter dasar (by status, by assignee, by due date)   
 - **Platform:** Web
 
 # Out of Scope 
