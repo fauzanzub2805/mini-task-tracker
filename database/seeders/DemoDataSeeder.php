@@ -110,8 +110,8 @@ class DemoDataSeeder extends Seeder
 
     private function makeUser(string $name, string $email, string $roleName, ?User $inviter): User
     {
-        // Gerbang ERD: tidak ada akun tanpa undangan (users.invitation_id NOT NULL, unique).
-        $invitation = $this->makeInvitation(
+        // Gerbang ERD: tidak ada akun tanpa undangan (undangan dicocokkan lewat email).
+        $this->makeInvitation(
             $email,
             $roleName,
             $inviter,
@@ -122,7 +122,6 @@ class DemoDataSeeder extends Seeder
         $user = User::firstOrCreate(
             ['email' => $email],
             [
-                'invitation_id' => $invitation->id,
                 'name' => $name,
                 'password_hash' => self::PASSWORD, // di-hash otomatis oleh cast 'hashed'
             ]

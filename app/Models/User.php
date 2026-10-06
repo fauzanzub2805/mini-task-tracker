@@ -13,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['invitation_id', 'name', 'email', 'password_hash'])]
+#[Fillable(['name', 'email', 'password_hash'])]
 #[Hidden(['password_hash'])]
 class User extends Authenticatable
 {
@@ -54,7 +54,8 @@ class User extends Authenticatable
 
     public function invitation(): BelongsTo
     {
-        return $this->belongsTo(Invitation::class);
+        // Tidak ada FK: undangan dicocokkan lewat email.
+        return $this->belongsTo(Invitation::class, 'email', 'email');
     }
 
     public function createdProjects(): HasMany

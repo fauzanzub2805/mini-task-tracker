@@ -70,7 +70,7 @@ class DemoSeederTest extends TestCase
             Invitation::whereNull('invited_by_id')->firstOrFail()->email
         );
 
-        // Tiap user punya undangan sendiri (invitation_id unik), peran undangan = peran global.
+        // Tiap user punya undangan sendiri (dicocokkan lewat email), peran undangan = peran global.
         foreach (User::with('invitation.role')->get() as $user) {
             $this->assertSame($user->email, $user->invitation->email);
             $this->assertTrue($user->hasRole($user->invitation->role->name));

@@ -38,7 +38,6 @@ class ModelRelationsTest extends TestCase
         ]);
 
         $user = User::create([
-            'invitation_id' => $invitation->id,
             'name' => 'Admin',
             'email' => 'admin@example.com',
             'password_hash' => 'rahasia123',
