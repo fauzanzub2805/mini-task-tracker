@@ -8,6 +8,7 @@ Muhammad Fauzan Zubaedi
 - Bahasa Pemrograman : **PHP**
 - Database : **Postgresql**
 - ORM/Query : **Migration bawaan Laravel**
+- RBAC : **spatie/laravel-permission ^8** (PHP 8.3+, Laravel 13)
 - Frontend : **Blade + Tailwind CSS + Alpine.js** 
 - Hosting : **Render**
 
@@ -17,6 +18,7 @@ Muhammad Fauzan Zubaedi
 - Aplikasi melayani satu tim secara tertutup. Pendaftaran hanya melalui token undangan.
 - Terdapat Role Sistem: **Admin** (Mengelola sistem/undangan) dan **Member** (Pengguna biasa).
 - Terdapat Role Aplikasi/Project: **Manager** (Bisa membuat project, menambah staff, membuat/mengelola task) dan **Staff** (Hanya bisa membuat/mengelola task di project tempat ia ditugaskan).
+- Role dan permission dikelola dengan **spatie/laravel-permission**: setiap role disimpan sebagai baris di tabel `roles` (bukan kolom varchar), dan hak akses sebagai baris di tabel `permissions`.
 
 *2.2 Entity*
 Diperluas menjadi 7 entitas utama:
@@ -44,8 +46,7 @@ B. **users**
 - name: VARCHAR(100)
 - email: VARCHAR(255), UNIQUE
 - password_hash: VARCHAR(255)
-- system_role: VARCHAR(20) (Admin/Member)
-- app_role: VARCHAR(20) (Manager/Staff)
+- 
 - created_at: TIMESTAMPTZ
 - updated_at: TIMESTAMPTZ
 
