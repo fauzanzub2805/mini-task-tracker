@@ -8,6 +8,11 @@ use Illuminate\Validation\Rule;
 
 class ListTasksRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return $this->user()->can('viewAny', [Task::class, $this->route('project')]);
+    }
+
     protected function prepareForValidation(): void
     {
         if (is_string($this->q)) {

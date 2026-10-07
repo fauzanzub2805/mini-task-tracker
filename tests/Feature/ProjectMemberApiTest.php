@@ -100,6 +100,24 @@ class ProjectMemberApiTest extends ApiTestCase
         $this->getJson("/projects/{$project->id}/members")->assertForbidden();
     }
 
+    public function test_unauthorized_caller_gets_403_before_validation_leaks_anything(): void
+    {
+        $manager = $this->makeUser('manager');
+        $staff = $this->makeUser('staff');
+        $project = $this->makeProject($manager);
+        $this->join($project, $staff, 'staff');
+        $task = $this->makeTask($project, $manager);
+        $outsider = $this->makeUser('manager');
+
+        // Body sengaja tidak valid: tetap 403, bukan 422.
+        $this->actingAs($staff)->postJson("/projects/{$project->id}/members", ['user_id' => 99999])->assertForbidden();
+        $this->postJson('/projects', [])->assertForbidden();
+        $this->actingAs($outsider)->postJson("/projects/{$project->id}/tasks", ['assignee_id' => 99999])->assertForbidden();
+        $this->patchJson("/tasks/{$task->id}", ['assignee_id' => 99999])->assertForbidden();
+        $this->postJson("/tasks/{$task->id}/comments", [])->assertForbidden();
+        $this->getJson("/projects/{$project->id}/tasks?sort=bogus")->assertForbidden();
+    }
+
     public function test_users_and_priorities_endpoints(): void
     {
         $user = $this->makeUser('staff');

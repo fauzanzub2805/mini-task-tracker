@@ -14,6 +14,11 @@ class UpdateProjectMemberRequest extends FormRequest
             ->where(fn ($q) => $q->where('guard_name', 'web')->whereIn('name', ['manager', 'staff']));
     }
 
+    public function authorize(): bool
+    {
+        return $this->user()->can('manageMembers', $this->route('project'));
+    }
+
     public function rules(): array
     {
         return [

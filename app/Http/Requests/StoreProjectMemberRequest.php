@@ -7,6 +7,11 @@ use Illuminate\Validation\Rule;
 
 class StoreProjectMemberRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return $this->user()->can('manageMembers', $this->route('project'));
+    }
+
     public function rules(): array
     {
         $project = $this->route('project');

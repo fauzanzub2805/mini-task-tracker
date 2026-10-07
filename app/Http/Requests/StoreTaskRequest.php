@@ -8,6 +8,11 @@ use Illuminate\Validation\Rule;
 
 class StoreTaskRequest extends FormRequest
 {
+    public function authorize(): bool
+    {
+        return $this->user()->can('create', [Task::class, $this->route('project')]);
+    }
+
     public function rules(): array
     {
         $project = $this->route('project');
