@@ -13,8 +13,8 @@ use Illuminate\Validation\ValidationException;
 
 class InvitationController extends Controller
 {
-    /** Masa berlaku undangan (hari). */
-    public const TTL_DAYS = 7;
+    /** Masa berlaku token undangan (menit). */
+    public const TTL_MINUTES = 10;
 
     public function index(Request $request)
     {
@@ -47,13 +47,13 @@ class InvitationController extends Controller
             'invited_by_id' => $request->user()->id,
             'role_id' => $request->role_id,
             'status' => Invitation::STATUS_PENDING,
-            'expires_at' => now()->addDays(self::TTL_DAYS),
+            'expires_at' => now()->addMinutes(self::TTL_MINUTES),
             'accepted_at' => null,
         ])->save();
 
         $link = url('/register?token='.$invitation->token);
         Mail::raw(
-            "Anda diundang ke Mini Task Tracker.\n\nDaftar melalui tautan berikut (berlaku ".self::TTL_DAYS." hari):\n{$link}\n",
+            "Anda diundang ke Mini Task Tracker.\n\nDaftar melalui tautan berikut (berlaku ".self::TTL_MINUTES." menit):\n{$link}\n",
             fn ($message) => $message->to($invitation->email)->subject('Undangan Mini Task Tracker'),
         );
 

@@ -36,6 +36,26 @@ class AuthInvitationTest extends ApiTestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    public function test_invitation_token_expires_after_10_minutes(): void
+    {
+        Mail::fake();
+        $this->actingAs($this->makeUser('admin'))->postJson('/invitations', [
+            'email' => 'cepat@example.com', 'role_id' => Role::findByName('staff', 'web')->id,
+        ])->assertCreated();
+
+        $inv = Invitation::where('email', 'cepat@example.com')->firstOrFail();
+        $this->assertEqualsWithDelta(10 * 60, now()->diffInSeconds($inv->expires_at, true), 5);
+
+        $this->travel(9)->minutes();
+        $this->getJson('/invitations/'.$inv->token)->assertOk();
+
+        $this->travel(2)->minutes();
+        $this->getJson('/invitations/'.$inv->token)->assertUnprocessable();
+        $this->postJson('/auth/register', ['token' => $inv->token, 'name' => 'Telat', 'password' => 'rahasia123'])
+            ->assertUnprocessable();
+        $this->assertDatabaseMissing('users', ['email' => 'cepat@example.com']);
+    }
+
     public function test_register_rejects_used_revoked_expired_and_unknown_tokens(): void
     {
         $cases = [
