@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['name', 'email', 'password_hash'])]
@@ -56,6 +57,24 @@ class User extends Authenticatable
     {
         // Tidak ada FK: undangan dicocokkan lewat email.
         return $this->belongsTo(Invitation::class, 'email', 'email');
+    }
+
+    /** Peran user di sebuah project, atau null bila bukan anggota. */
+    public function roleInProject(Project|int $project): ?Role
+    {
+        $projectId = $project instanceof Project ? $project->id : $project;
+
+        return ProjectMember::query()
+            ->where('project_id', $projectId)
+            ->where('user_id', $this->id)
+            ->first()
+            ?->role;
+    }
+
+    /** Lapis 1 + 2: izin diambil dari peran user di project tersebut. */
+    public function canInProject(string $permission, Project|int $project): bool
+    {
+        return $this->roleInProject($project)?->hasPermissionTo($permission) ?? false;
     }
 
     public function createdProjects(): HasMany

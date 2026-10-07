@@ -10,6 +10,13 @@ use LogicException;
 #[Fillable(['project_id', 'task_id', 'user_id', 'action', 'description'])]
 class Activity extends Model
 {
+    /** 11 nilai action yang sah (TSD 2.2 G). Divalidasi di aplikasi. */
+    public const ACTIONS = [
+        'project.created', 'project.updated', 'project.member_added', 'project.member_removed',
+        'task.created', 'task.updated', 'task.status_changed', 'task.priority_changed',
+        'task.assigned', 'task.deleted', 'comment.created',
+    ];
+
     /** Tabel hanya punya created_at (tanpa updated_at). */
     public const UPDATED_AT = null;
 

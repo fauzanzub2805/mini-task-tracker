@@ -55,7 +55,8 @@ class Invitation extends Model
 
     public function user(): HasOne
     {
-        return $this->hasOne(User::class);
+        // Tanpa FK: undangan dan akun dihubungkan lewat email (TSD Revisi 5).
+        return $this->hasOne(User::class, 'email', 'email');
     }
 
     /** Kedaluwarsa dihitung dari expires_at, bukan dari status. */
