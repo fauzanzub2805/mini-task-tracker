@@ -2,7 +2,7 @@
 
 **Muhammad Fauzan Zubaedi**
 
-**Status: REVISI 5** 
+**Status: REVISI 5 FIX** 
 
 # In Scope (MVP)
 
@@ -14,6 +14,7 @@
 - **Komentar:** Kolom komentar teks biasa untuk setiap task
 - **Activity (Audit Trail):** Riwayat aktivitas terbaru pada project dan pada task
 - **Tampilan:** List view, dengan sort dan filter dasar (by status, by prioritas, by assignee, by due date)
+- **Search:** Pencarian sederhana berdasarkan judul task di dalam satu project (prioritas P2, nice to have)
 - **Platform:** Web
 
 # Out of Scope
@@ -35,6 +36,7 @@
 
 - Stack berganti dari React + Vite + Prisma menjadi **Laravel + PostgreSQL + Blade/Tailwind/Alpine**, RBAC memakai **spatie/laravel-permission**, hosting di **Render**
 - **Masuk scope:** undangan, RBAC tiga peran, modul Project dan keanggotaannya, activity (audit trail), prioritas task
+- **Search by title** masuk scope sebagai fitur P2, mengikuti PRD
 - **Prioritas** sebelumnya out of scope, sekarang masuk scope. Labels/tags dan custom fields tetap out of scope
 - Komentar sekarang hanya untuk task, bukan untuk project
 
@@ -56,6 +58,7 @@
 - Endpoint comment
 - **Frontend**: list task, form tambah/edit task, detail task dengan komentar
 - Filter dan sort (by status, by prioritas, by assignee, by due date) di frontend dan query backend
+- Search by title sederhana (P2, dikerjakan bila waktu cukup)
 
 **Minggu 4: Activity, Testing & Bug Fixing**
 - Pencatatan dan tampilan activity pada project dan task
