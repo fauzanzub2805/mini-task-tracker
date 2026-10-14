@@ -43,6 +43,9 @@
 .signin-otp-fields input { width: 0; flex: 1; min-width: 0; height: 125px; border: 1px solid #080d20; border-radius: 8px; background: white; text-align: center; font-size: 30px; }
 .signin-resend { background: #009c6a; border-color: #009c6a; margin-top: 9px; }
 .signin-success { text-align: center; }
+.signin-success-actions { display: flex; flex-direction: column; gap: 16px; margin-top: 24px; }
+.signin-button.signin-button-secondary { background: white; color: #647794; border-color: #dce3ee; }
+.signin-button.signin-button-secondary:not(:disabled):hover { background: #eff4fc; color: #182133; }
 .signin-success-icon { display: inline-grid; place-items: center; width: 64px; height: 64px; background: #e6f7ef; color: #009c6a; border-radius: 50%; font-size: 34px; }
 .signin-success h2 { font-size: 26px; margin: 12px 0; font-weight: 600; }
 .signin-success dl { display: grid; grid-template-columns: auto 1fr; gap: 10px; text-align: left; background: #f5f7fb; padding: 18px; margin: 20px 0; border-radius: 8px; }
