@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Route;
 Route::redirect('/', '/login');
 Route::get('/login', LoginPageController::class)->name('login');
 
+// Preview UI saja: tidak memuat data pengguna/project nyata atau endpoint AI.
+Route::view('/dashboard/preview', 'dashboard')->name('dashboard.preview');
+
 // Publik
 Route::get('/invitations/{token}', [InvitationController::class, 'show']);
 Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
@@ -23,6 +26,7 @@ Route::post('/auth/login', [AuthController::class, 'login'])->middleware('thrott
 
 // Perlu login (guard web, session cookie)
 Route::middleware('auth')->group(function () {
+    Route::view('/dashboard', 'dashboard')->name('dashboard');
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
 

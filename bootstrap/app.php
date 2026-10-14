@@ -12,12 +12,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Backend murni JSON: tamu tidak diarahkan ke halaman login, cukup 401.
-        $middleware->redirectGuestsTo(fn () => null);
+        // Halaman dashboard mengarah ke login; endpoint API tetap JSON 401.
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('dashboard') ? route('login') : null);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Semua endpoint API selalu JSON; hanya halaman frontend (/, /login) yang boleh HTML.
+        // Endpoint API tetap JSON; halaman frontend boleh mengembalikan HTML.
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => ! $request->is('/', 'login') || $request->expectsJson(),
+            fn (Request $request) => ! $request->is('/', 'login', 'dashboard', 'dashboard/preview') || $request->expectsJson(),
         );
     })->create();

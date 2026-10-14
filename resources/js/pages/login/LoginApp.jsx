@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLogin } from './useLogin.js';
 
 export const PREVIEW_STATES = {
@@ -42,13 +42,16 @@ function OtpPreview() {
     return <section className="signin-otp" aria-label="Preview verifikasi OTP"><p>Insert the OTP code for 2-step Verification</p><div className="signin-otp-fields">{[1, 2, 3, 4].map(n => <input key={n} aria-label={`OTP digit ${n} (preview)`} inputMode="numeric" maxLength={1} disabled />)}</div><button className="signin-button" disabled>Verify</button><button className="signin-button signin-resend" disabled>Re-send OTP Code</button></section>;
 }
 function SuccessPanel({ user, onLogout, loggingOut, preview }) {
-    return <section className="signin-success" data-testid="login-success"><span className="signin-success-icon" aria-hidden="true">✓</span><h2>Login berhasil</h2><p role="status">Selamat datang, <strong>{user.name}</strong>.</p><dl><dt>Email</dt><dd>{user.email}</dd><dt>Peran</dt><dd>{user.roles?.join(', ') || '-'}</dd></dl><p className="signin-success-note">{preview ? 'Contoh tampilan saja — tidak membuat sesi login.' : 'Sesi Laravel aktif. Dashboard belum tersedia pada tahap ini.'}</p>{!preview && <button className="signin-button" onClick={onLogout} disabled={loggingOut}>{loggingOut ? 'Keluar…' : 'Keluar'}</button>}</section>;
+    return <section className="signin-success" data-testid="login-success"><span className="signin-success-icon" aria-hidden="true">✓</span><h2>Login berhasil</h2><p role="status">Selamat datang, <strong>{user.name}</strong>.</p><dl><dt>Email</dt><dd>{user.email}</dd><dt>Peran</dt><dd>{user.roles?.join(', ') || '-'}</dd></dl><p className="signin-success-note">{preview ? 'Contoh tampilan saja — tidak membuat sesi login.' : 'Login berhasil. Mengarahkan ke dashboard…'}</p>{!preview && <a href="/dashboard" className="signin-button">Buka Dashboard</a>}{!preview && <button className="signin-button" onClick={onLogout} disabled={loggingOut}>{loggingOut ? 'Keluar…' : 'Keluar'}</button>}</section>;
 }
 
 /** Preview tidak pernah memanggil submit/logout atau mengubah sesi server. */
 export function LoginApp({ csrfToken = '', oldEmail = '', user = null, previewState = null }) {
     const login = useLogin({ csrfToken, oldEmail, user });
     const preview = Object.hasOwn(PREVIEW_STATES, previewState ?? '');
+    useEffect(() => {
+        if (!preview && login.user) window.location.assign('/dashboard');
+    }, [preview, login.user]);
     const busy = preview ? ['loading', 'otp-loading'].includes(previewState) : login.loading;
     const otp = preview && ['otp', 'wrong-token'].includes(previewState);
     const success = preview ? previewState === 'success' : !!login.user;

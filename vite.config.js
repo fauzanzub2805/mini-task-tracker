@@ -8,7 +8,7 @@ export default defineConfig({
     plugins: [
         laravel({
             // Entry point React (app.jsx) dipanggil dari host Blade via @vite.
-            input: ['resources/css/app.css', 'resources/js/app.jsx'],
+            input: ['resources/css/app.css', 'resources/js/app.jsx', 'resources/js/dashboard.jsx'],
             refresh: true,
             fonts: [
                 bunny('Instrument Sans', {
