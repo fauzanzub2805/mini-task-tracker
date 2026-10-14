@@ -16,7 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(fn () => null);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Semua endpoint API selalu JSON; hanya halaman frontend (/, /login) yang boleh HTML.
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => ! $request->is('/') || $request->expectsJson(),
+            fn (Request $request) => ! $request->is('/', 'login') || $request->expectsJson(),
         );
     })->create();

@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\LoginPageController;
 use App\Http\Controllers\PriorityController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
@@ -11,9 +12,9 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Halaman frontend (host Blade minimal + React + Tailwind)
+Route::redirect('/', '/login');
+Route::get('/login', LoginPageController::class)->name('login');
 
 // Publik
 Route::get('/invitations/{token}', [InvitationController::class, 'show']);
