@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { HeaderInbox } from './HeaderInbox.jsx';
 
 const rows = [
     ['Fiksasi Tim Google', 'Google Vendor', 'Ardhito Pramono', 'You', 'In Progress'],
@@ -10,7 +11,7 @@ const rows = [
 const statuses = ['Open Task', 'In Progress', 'Finish Dev', 'Testing', 'Finished'];
 const statusClass = status => status.toLowerCase().replaceAll(' ', '-');
 
-export function DashboardApp({ user = null }) {
+export function DashboardApp({ user = null, notifications = [], messages = [] }) {
     const name = user ? (user.name?.trim() || 'Pengguna') : 'Fulan bin Fulan';
     const initial = Array.from(name)[0].toLocaleUpperCase('id-ID');
     const roleLabels = { admin: 'Admin', manager: 'Manager', staff: 'Staff' };
@@ -33,7 +34,7 @@ export function DashboardApp({ user = null }) {
             </nav>
         </aside>
         <div className="dashboard-main">
-            <header className="dashboard-header"><button className="dashboard-menu-toggle" aria-label="Buka/tutup navigasi" aria-expanded={mobileOpen} aria-controls="dashboard-sidebar" onClick={() => setMobileOpen(!mobileOpen)}>☰</button><time dateTime={new Date().toISOString()}>{new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date())}</time><div className="dashboard-account"><button aria-label="Notifikasi belum tersedia" disabled>♧</button><button aria-label="Pesan belum tersedia" disabled>☏</button><div><strong>{name}</strong><small>{role}</small></div><span className="dashboard-avatar" aria-hidden="true">{initial}</span></div></header>
+            <header className="dashboard-header"><button className="dashboard-menu-toggle" aria-label="Buka/tutup navigasi" aria-expanded={mobileOpen} aria-controls="dashboard-sidebar" onClick={() => setMobileOpen(!mobileOpen)}>☰</button><time dateTime={new Date().toISOString()}>{new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date())}</time><div className="dashboard-account"><HeaderInbox key={user?.id ?? 'guest'} userId={user?.id} notifications={notifications} messages={messages} /><div><strong>{name}</strong><small>{role}</small></div><span className="dashboard-avatar" aria-hidden="true">{initial}</span></div></header>
             <main className="dashboard-content"><div className="dashboard-demo" role="note">{user ? 'Tabel menggunakan data contoh. AI Chatbot belum aktif.' : 'Preview dashboard — identitas dan tabel menggunakan data contoh. AI Chatbot belum aktif.'}</div>
                 <section id="ai-chatbot" className="dashboard-welcome" aria-labelledby="welcome-title"><h1 id="welcome-title">Welcome, {name.split(/\s+/)[0]}!</h1><p>Ask AI to see everything due today across all your projects here.</p><div className="dashboard-search"><div><input aria-label="AI Chatbot (belum tersedia)" placeholder="Type here to search task or make a new project & task..." disabled /><button disabled aria-label="Tambah lampiran belum tersedia">+</button></div><button disabled aria-label="Kirim ke AI belum tersedia">➤</button></div><img src="/images/login-illustration.png" alt="" className="dashboard-illustration" /></section>
                 <section id="progress-table" className="dashboard-progress" aria-labelledby="progress-title"><h2 className="sr-only" id="progress-title">Progress Table</h2><div className="dashboard-stats">{statuses.map(status => <div key={status} className={`dashboard-stat ${statusClass(status)}`}><span>{status}</span><strong>{rows.filter(row => row[4] === status).length}</strong></div>)}</div>
