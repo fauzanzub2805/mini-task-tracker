@@ -4,6 +4,7 @@ import { MessagePage } from '../profile/MessagePage.jsx';
 import { ProfilePage } from '../profile/ProfilePage.jsx';
 import { messagingApi } from '../../lib/messagingApi.js';
 import { initials } from '../../lib/format.js';
+import { LogoutControl } from './LogoutControl.jsx';
 
 const rows = [
     ['Fiksasi Tim Google', 'Google Vendor', 'Ardhito Pramono', 'You', 'In Progress'],
@@ -92,6 +93,7 @@ export function DashboardApp({ user = null, notifications = [], page = 'dashboar
                 </div>}
 
                 <button className="dashboard-nav-item" disabled title="Settings belum tersedia"><span aria-hidden="true">⚙</span>Settings<span className="dashboard-chevron">›</span></button>
+                <LogoutControl enabled={Boolean(user)} />
             </nav>
         </aside>
         <div className="dashboard-main">
