@@ -39,6 +39,27 @@ class DirectMessageApiTest extends ApiTestCase
         $this->getJson('/messaging/users?q=ALICE')->assertOk()->assertJsonCount(0, 'data');
     }
 
+    public function test_user_directory_without_query_lists_existing_accounts_ordered_by_name_and_capped_at_fifty(): void
+    {
+        $alice = User::factory()->create(['name' => 'Alice Wijaya']);
+
+        foreach (range(1, 55) as $index) {
+            User::factory()->create(['name' => sprintf('Zeta %02d', $index)]);
+        }
+
+        $response = $this->actingAs($alice)->getJson('/messaging/users')->assertOk()->assertJsonCount(50, 'data');
+
+        $names = collect($response->json('data'))->pluck('name')->all();
+        $ids = collect($response->json('data'))->pluck('id')->all();
+        $sorted = $names;
+        sort($sorted, SORT_STRING);
+
+        $this->assertSame($sorted, $names, 'Direktori pengguna harus urut nama.');
+        $this->assertSame('Zeta 01', $names[0]);
+        $this->assertSame('Zeta 50', $names[49]);
+        $this->assertNotContains($alice->id, $ids, 'Akun yang login tidak boleh muncul.');
+    }
+
     public function test_conversation_list_orders_latest_and_reports_green_and_red_statuses(): void
     {
         $alice = $this->makeUser();

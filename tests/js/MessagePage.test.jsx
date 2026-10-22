@@ -152,6 +152,104 @@ it('searches user names and message bodies and lets you start a new conversation
     expect(screen.getByRole('textbox', { name: 'Tulis pesan' })).toBeVisible();
 });
 
+it('lists real accounts from the user directory on an empty query', async () => {
+    const fetch = stubFetch(url => {
+        if (url.startsWith('/messaging/conversations')) return json({ data: [], unread_count: 0 });
+        if (url === '/messaging/users?q=') {
+            return json({ data: [{ id: 2, name: 'Henry Dholi' }, { id: 3, name: 'Rina Marlina' }] });
+        }
+        if (url === '/messaging/users/2/messages') return json({ data: [] });
+        return json({ data: [] });
+    });
+
+    render(<MessagePage user={me} />);
+
+    // Tanpa mengetik pencarian, akun yang ada di database langsung terlihat.
+    expect(await screen.findByRole('heading', { name: 'Mulai percakapan' })).toBeVisible();
+    expect(await screen.findByRole('button', { name: /Henry Dholi/ })).toBeVisible();
+    expect(screen.getByRole('button', { name: /Rina Marlina/ })).toBeVisible();
+    expect(screen.getByText('Belum ada percakapan. Pilih pengguna di bawah untuk memulai.')).toBeVisible();
+    expect(fetch.mock.calls.some(([url]) => url === '/messaging/users?q=')).toBe(true);
+
+    fireEvent.click(screen.getByRole('button', { name: /Henry Dholi/ }));
+    expect(screen.getByRole('heading', { name: 'Henry Dholi' })).toBeVisible();
+});
+
+it('shows a loading state and a retry when the user directory fails', async () => {
+    let attempts = 0;
+
+    stubFetch(url => {
+        if (url.startsWith('/messaging/conversations')) return json({ data: [], unread_count: 0 });
+        if (url === '/messaging/users?q=') {
+            attempts += 1;
+            return attempts === 1
+                ? json({ message: 'Server error' }, 500)
+                : json({ data: [{ id: 2, name: 'Henry Dholi' }] });
+        }
+        return json({ data: [] });
+    });
+
+    render(<MessagePage user={me} />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Gagal memuat daftar pengguna.');
+    fireEvent.click(screen.getByRole('button', { name: 'Coba lagi' }));
+
+    expect(await screen.findByRole('button', { name: /Henry Dholi/ })).toBeVisible();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+
+it('sends to two different accounts and keeps a separate draft per recipient', async () => {
+    const sent = [];
+
+    stubFetch((url, options = {}) => {
+        const method = options.method ?? 'GET';
+        if (url.startsWith('/messaging/conversations')) return json({ data: [], unread_count: 0 });
+        if (url === '/messaging/users?q=') {
+            return json({ data: [{ id: 2, name: 'Henry Dholi' }, { id: 3, name: 'Rina Marlina' }] });
+        }
+        if (url === '/messaging/users/2/messages' && method === 'GET') return json({ data: [] });
+        if (url === '/messaging/users/3/messages' && method === 'GET') return json({ data: [] });
+        if (url === '/messaging/users/2/messages' && method === 'POST') {
+            sent.push({ userId: 2, body: options.body.get('body') });
+            return json({ data: message({ id: 21, sender_id: 1, recipient_id: 2, body: options.body.get('body') }) }, 201);
+        }
+        if (url === '/messaging/users/3/messages' && method === 'POST') {
+            sent.push({ userId: 3, body: options.body.get('body') });
+            return json({ data: message({ id: 22, sender_id: 1, recipient_id: 3, body: options.body.get('body') }) }, 201);
+        }
+        return json({ data: [] });
+    });
+
+    render(<MessagePage user={me} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /Henry Dholi/ }));
+    const henryComposer = await screen.findByRole('textbox', { name: 'Tulis pesan' });
+    fireEvent.change(henryComposer, { target: { value: 'Halo Henry, ini draf saya' } });
+
+    // Pindah ke akun lain: draf Henry tersimpan, draf Rina masih kosong.
+    fireEvent.click(screen.getByRole('button', { name: /Rina Marlina/ }));
+    expect(screen.getByRole('heading', { name: 'Rina Marlina' })).toBeVisible();
+    const rinaComposer = await screen.findByRole('textbox', { name: 'Tulis pesan' });
+    expect(rinaComposer).toHaveValue('');
+
+    fireEvent.change(rinaComposer, { target: { value: 'Halo Rina' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim pesan' }));
+
+    await waitFor(() => expect(sent).toEqual([{ userId: 3, body: 'Halo Rina' }]));
+    expect(await screen.findByText('Halo Rina', { selector: '.message-body' })).toBeVisible();
+
+    // Kembali ke Henry: draf lamanya masih utuh dan terkirim ke penerima yang benar.
+    fireEvent.click(screen.getByRole('button', { name: /Henry Dholi/ }));
+    const backToHenry = await screen.findByRole('textbox', { name: 'Tulis pesan' });
+    expect(backToHenry).toHaveValue('Halo Henry, ini draf saya');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim pesan' }));
+
+    await waitFor(() => expect(sent).toHaveLength(2));
+    expect(sent[1]).toEqual({ userId: 2, body: 'Halo Henry, ini draf saya' });
+    expect(await screen.findByText('Halo Henry, ini draf saya', { selector: '.message-body' })).toBeVisible();
+});
+
 it('sends the typed message to the selected recipient and clears the draft', async () => {
     const fetch = stubFetch((url, options = {}) => {
         const method = options.method ?? 'GET';
@@ -293,8 +391,12 @@ it('offers a login link when the session expired', async () => {
 
     render(<MessagePage user={me} />);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Sesi Anda berakhir.');
-    expect(screen.getByRole('link', { name: 'Masuk kembali' })).toHaveAttribute('href', '/login');
+    // Daftar percakapan dan direktori pengguna sama-sama memberi tahu sesi berakhir.
+    const alerts = await screen.findAllByRole('alert');
+    expect(alerts).toHaveLength(2);
+    alerts.forEach(alert => expect(alert).toHaveTextContent('Sesi Anda berakhir.'));
+    screen.getAllByRole('link', { name: 'Masuk kembali' })
+        .forEach(link => expect(link).toHaveAttribute('href', '/login'));
 });
 
 it('ignores a delayed thread GET that resolves after a successful send', async () => {

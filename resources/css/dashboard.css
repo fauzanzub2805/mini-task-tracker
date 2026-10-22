@@ -105,11 +105,15 @@ html:has(.dashboard-shell) { scroll-behavior: smooth; scroll-padding-top: 100px;
 .message-search input::placeholder { color: #8b97a8; }
 .message-search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #6d7a8c; pointer-events: none; }
 .message-list-state { padding: 22px 6px; color: #6d7a8c; font-size: 13px; text-align: center; }
+.message-list-state.is-error { color: #a3121f; }
+.message-list-state.is-error a { color: #a3121f; font-weight: 700; text-decoration: underline; }
+.message-retry { margin-left: 4px; padding: 2px 8px; border-radius: 5px; border: 1px solid #f3b7b1; background: #fff1ef; color: #a3121f; font-size: 12px; font-weight: 600; }
+.message-retry:hover { background: #ffe3df; }
 .message-conversations, .message-suggestions ul { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
-.message-conversations { display: flex; flex-direction: column; gap: 2px; }
+.message-conversations { display: flex; flex-direction: column; gap: 2px; flex: 0 1 auto; min-height: 0; }
 .message-conversation, .message-suggestion { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 8px; text-align: left; background: transparent; }
 .message-conversation:hover, .message-suggestion:hover { background: #f6f7f9; }
-.message-conversation.is-selected { background: #fdecea; }
+.message-conversation.is-selected, .message-suggestion.is-selected { background: #fdecea; }
 .message-avatar { display: grid; place-items: center; flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: #e7e9ee; color: #46536a; font-weight: 600; font-size: 13px; overflow: hidden; }
 .message-conversation-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .message-conversation-name { display: flex; align-items: center; gap: 6px; min-width: 0; }
@@ -120,8 +124,9 @@ html:has(.dashboard-shell) { scroll-behavior: smooth; scroll-padding-top: 100px;
 .message-status-dot.unread { background: #22b573; }
 .message-status-dot.awaiting_reply { background: #ef4035; }
 .message-unread-badge { flex-shrink: 0; display: grid; place-items: center; min-width: 24px; height: 22px; padding: 0 6px; border-radius: 5px; background: #eff1f4; color: #3c485c; font-size: 12px; font-weight: 600; }
-.message-suggestions { margin-top: 14px; border-top: 1px solid #ececec; padding-top: 10px; }
-.message-suggestions h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #6d7a8c; margin: 4px 10px 8px; }
+.message-suggestions { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; margin-top: 14px; border-top: 1px solid #ececec; padding-top: 10px; }
+.message-suggestions h3 { flex-shrink: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #6d7a8c; margin: 4px 10px 8px; }
+.message-suggestions ul { flex: 1 1 auto; min-height: 0; }
 .message-suggestion > span:last-child { display: flex; flex-direction: column; min-width: 0; }
 .message-suggestion small { font-size: 12px; color: #6d7a8c; }
 .message-thread-pane { display: flex; flex-direction: column; min-height: 0; min-width: 0; }

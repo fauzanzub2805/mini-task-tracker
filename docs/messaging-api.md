@@ -10,7 +10,7 @@ tidak pernah lewat `/storage`. Unduhan hanya lewat route ber-otorisasi.
 
 | Method | Path | Keterangan |
 | --- | --- | --- |
-| GET | `/messaging/users?q=` | Cari pengguna lain berdasarkan nama (self dikecualikan). |
+| GET | `/messaging/users?q=` | Direktori pengguna lain (self dikecualikan) urut nama. Tanpa `q` mengembalikan akun yang ada di database sehingga bisa langsung dipilih; hasil dibatasi **50 pengguna pertama**. |
 | GET | `/messaging/conversations?q=` | Daftar percakapan, terbaru lebih dulu. `q` mencocokkan nama lawan bicara atau isi pesan pada percakapan milik sendiri. |
 | GET | `/messaging/users/{user}/messages` | Maksimal 100 pesan terakhir, urut kronologis. |
 | POST | `/messaging/users/{user}/messages` | Multipart: `body` (≤4000) dan/atau `attachment` (≤10 MB). |
@@ -22,11 +22,15 @@ Percakapan dengan diri sendiri ditolak `422`.
 
 ## Bentuk data
 
-`GET /messaging/users`:
+`GET /messaging/users` (dengan atau tanpa `q`):
 
 ```json
 { "data": [{ "id": 1, "name": "Bob" }] }
 ```
+
+`q` kosong berarti direktori akun: maksimal **50 pengguna** urut `name`, tanpa
+akun yang sedang login. UI memakainya untuk bagian **Mulai percakapan** agar
+akun dummy/seed yang sudah ada langsung terlihat tanpa mengetik pencarian.
 
 `GET /messaging/conversations`:
 
@@ -131,3 +135,5 @@ Percakapan dengan diri sendiri ditolak `422`.
   `GET /messaging/messages/{message}/attachment` dan hanya untuk peserta.
 - Pembaruan memakai polling 5 detik, bukan realtime.
 - Pencarian memakai kolom `users.name`; belum ada kolom `username` terpisah.
+- Direktori pengguna pada `GET /messaging/users` dibatasi 50 akun pertama urut
+  nama; akun selebihnya hanya muncul lewat pencarian nama.

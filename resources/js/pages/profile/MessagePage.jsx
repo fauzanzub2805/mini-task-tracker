@@ -62,6 +62,10 @@ export function MessagePage({ user, onUnreadChange }) {
     const [search, setSearch] = useState('');
     const [query, setQuery] = useState('');
     const [people, setPeople] = useState([]);
+    const [peopleLoading, setPeopleLoading] = useState(true);
+    const [peopleError, setPeopleError] = useState(null);
+    // Dinaikkan tombol "Coba lagi" agar direktori pengguna dimuat ulang.
+    const [peopleAttempt, setPeopleAttempt] = useState(0);
     const [selected, setSelected] = useState(null);
     const [messages, setMessages] = useState([]);
     // Pemilik array `messages` saat ini. Mencegah pesan lama ikut ditandai
@@ -81,6 +85,7 @@ export function MessagePage({ user, onUnreadChange }) {
     const selectedRef = useRef(null);
     const threadSequence = useRef(0);
     const listSequence = useRef(0);
+    const peopleSequence = useRef(0);
     // Dinaikkan sebelum dan sesudah setiap mutasi (kirim/hapus/tandai baca)
     // supaya respons GET yang masih berjalan tidak menimpa hasil mutasi.
     const mutationRevision = useRef(0);
@@ -154,20 +159,37 @@ export function MessagePage({ user, onUnreadChange }) {
         };
     }, [loadConversations]);
 
-    // Pencarian pengguna lain (nama) untuk memulai percakapan baru.
+    // Direktori pengguna nyata dari database. Tanpa kata kunci, endpoint
+    // mengembalikan maksimal 50 pengguna (selain diri sendiri) sehingga akun
+    // yang ada langsung bisa dipilih tanpa mengetik nama lebih dulu.
     useEffect(() => {
-        if (!userId || query.trim() === '') {
+        if (!userId) {
             setPeople([]);
+            setPeopleError(null);
+            setPeopleLoading(false);
             return undefined;
         }
 
-        let active = true;
-        messagingApi.users(query)
-            .then(data => { if (active) setPeople(Array.isArray(data?.data) ? data.data : []); })
-            .catch(() => { if (active) setPeople([]); });
+        const sequence = ++peopleSequence.current;
+        setPeopleLoading(true);
+        setPeopleError(null);
 
-        return () => { active = false; };
-    }, [query, userId]);
+        messagingApi.users(query)
+            .then(data => {
+                if (sequence !== peopleSequence.current) return;
+                setPeople(Array.isArray(data?.data) ? data.data : []);
+                setPeopleLoading(false);
+            })
+            .catch(error => {
+                if (sequence !== peopleSequence.current) return;
+                if (error?.name === 'AbortError') return;
+                setPeople([]);
+                setPeopleError(error);
+                setPeopleLoading(false);
+            });
+
+        return () => { peopleSequence.current += 1; };
+    }, [query, userId, peopleAttempt]);
 
     const loadMessages = useCallback(async (partner, { quiet = false } = {}) => {
         if (!partner) return;
@@ -305,6 +327,8 @@ export function MessagePage({ user, onUnreadChange }) {
 
     useEffect(() => () => window.clearTimeout(searchTimer.current), []);
 
+    // Draf teks dan lampiran disimpan per pengguna (lihat `drafts`/`files`),
+    // jadi berpindah lawan bicara tidak menghapus apa yang sudah diketik.
     function selectPartner(partner) {
         if (!partner) return;
         setComposerError(null);
@@ -475,7 +499,7 @@ export function MessagePage({ user, onUnreadChange }) {
 
     return <section className="message-page" aria-labelledby="message-title">
         <h1 id="message-title">Message</h1>
-        <p className="message-note">Pencarian mencocokkan nama pengguna dan isi pesan. Setiap percakapan menampilkan maksimal 100 pesan terbaru.</p>
+        <p className="message-note">Pilih pengguna dari daftar untuk mulai berkirim pesan. Pencarian mencocokkan nama pengguna dan isi pesan. Setiap percakapan menampilkan maksimal 100 pesan terbaru.</p>
         {listError?.authExpired && <p className="message-auth-error" role="alert">Sesi Anda berakhir. <a href="/login">Masuk kembali</a> untuk melanjutkan.</p>}
 
         <div className={`message-card ${selected ? 'is-thread-open' : ''}`}>
@@ -502,7 +526,7 @@ export function MessagePage({ user, onUnreadChange }) {
                 </form>
 
                 {listLoading && !conversations.length && <p className="message-list-state">Memuat percakapan…</p>}
-                {!listLoading && !conversations.length && <p className="message-list-state">{hasSearch ? 'Tidak ada percakapan yang cocok.' : 'Belum ada percakapan. Cari nama pengguna untuk memulai.'}</p>}
+                {!listLoading && !conversations.length && <p className="message-list-state">{hasSearch ? 'Tidak ada percakapan yang cocok.' : 'Belum ada percakapan. Pilih pengguna di bawah untuk memulai.'}</p>}
 
                 <ul className="message-conversations">
                     {conversations.map(conversation => {
@@ -532,23 +556,42 @@ export function MessagePage({ user, onUnreadChange }) {
                     })}
                 </ul>
 
-                {hasSearch && suggestions.length > 0 && <div className="message-suggestions">
-                    <h3>Pengguna lain</h3>
-                    <ul>{suggestions.map(person => <li key={person.id}>
-                        <button type="button" className="message-suggestion" onClick={() => selectPartner(person)}>
-                            <span className="message-avatar" aria-hidden="true">{initials(person.name)}</span>
-                            <span><strong className="message-conversation-label"><Highlight text={person.name} query={query} /></strong><small>Mulai percakapan</small></span>
-                        </button>
-                    </li>)}</ul>
-                </div>}
+                <section className="message-suggestions" aria-labelledby="message-people-title">
+                    <h3 id="message-people-title">{hasSearch ? 'Pengguna lain' : 'Mulai percakapan'}</h3>
 
-                {hasSearch && !listLoading && !suggestions.length && !conversations.length && <p className="message-list-state">Pengguna tidak ditemukan.</p>}
+                    {peopleLoading && <p className="message-list-state">Memuat pengguna…</p>}
+
+                    {!peopleLoading && peopleError && <p className="message-list-state is-error" role="alert">
+                        {peopleError.authExpired
+                            ? <>Sesi Anda berakhir. <a href="/login">Masuk kembali</a> untuk melanjutkan.</>
+                            : <>Gagal memuat daftar pengguna. <button type="button" className="message-retry" onClick={() => setPeopleAttempt(attempt => attempt + 1)}>Coba lagi</button></>}
+                    </p>}
+
+                    {!peopleLoading && !peopleError && !suggestions.length && <p className="message-list-state">
+                        {hasSearch ? 'Pengguna tidak ditemukan.' : 'Semua pengguna sudah ada di daftar percakapan.'}
+                    </p>}
+
+                    {!peopleLoading && !peopleError && suggestions.length > 0 && <ul>{suggestions.map(person => {
+                        const isSelected = selected?.id === person.id;
+                        return <li key={person.id}>
+                            <button
+                                type="button"
+                                className={`message-suggestion ${isSelected ? 'is-selected' : ''}`}
+                                aria-current={isSelected ? 'true' : undefined}
+                                onClick={() => selectPartner(person)}
+                            >
+                                <span className="message-avatar" aria-hidden="true">{initials(person.name)}</span>
+                                <span><strong className="message-conversation-label"><Highlight text={person.name} query={query} /></strong><small>Mulai percakapan</small></span>
+                            </button>
+                        </li>;
+                    })}</ul>}
+                </section>
             </aside>
 
             <section className="message-thread-pane" aria-label={selected ? `Percakapan dengan ${selected.name}` : 'Percakapan'}>
                 {!selected && <div className="message-thread-empty">
                     <h2>Pilih percakapan</h2>
-                    <p>Pilih kontak di samping atau cari nama pengguna untuk mulai berkirim pesan.</p>
+                    <p>Pilih pengguna dari daftar di samping, atau cari nama pengguna, untuk mulai berkirim pesan.</p>
                 </div>}
 
                 {selected && <>
