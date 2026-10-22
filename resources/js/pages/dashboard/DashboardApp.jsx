@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { HeaderInbox } from './HeaderInbox.jsx';
+import { LogoutControl } from './LogoutControl.jsx';
 
 const rows = [
     ['Fiksasi Tim Google', 'Google Vendor', 'Ardhito Pramono', 'You', 'In Progress'],
@@ -30,6 +31,7 @@ export function DashboardApp({ user = null, notifications = [], messages = [] })
             <nav><button className="dashboard-nav-item" aria-expanded={expanded} aria-controls="dashboard-sections" onClick={() => setExpanded(!expanded)}><span>▦</span> Dashboard <span className="dashboard-chevron">{expanded ? '⌃' : '⌄'}</span></button>
                 {expanded && <div id="dashboard-sections" className="dashboard-subnav"><a href="#ai-chatbot" aria-current={active === 'ai-chatbot' ? 'location' : undefined} onClick={() => navigate('ai-chatbot')}>AI Chatbot</a><a href="#progress-table" aria-current={active === 'progress-table' ? 'location' : undefined} onClick={() => navigate('progress-table')}>Progress Table</a></div>}
                 {['Projects', 'Calendar', 'Profile', 'Settings'].map((label, i) => <button key={label} className="dashboard-nav-item" disabled title={`${label} belum tersedia`}><span aria-hidden="true">{['☷', '▦', '♙', '⚙'][i]}</span>{label}<span className="dashboard-chevron">›</span></button>)}
+                <LogoutControl enabled={Boolean(user)} />
                 <p className="dashboard-nav-note">Menu halaman lain belum tersedia.</p>
             </nav>
         </aside>

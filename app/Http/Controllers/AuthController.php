@@ -8,6 +8,7 @@ use App\Http\Resources\UserResource;
 use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -66,13 +67,19 @@ class AuthController extends Controller
         return new UserResource($request->user()->load('roles'));
     }
 
-    public function logout(Request $request): JsonResponse
+    public function logout(Request $request): JsonResponse|RedirectResponse
     {
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->json(['message' => 'Logout berhasil.']);
+        // Klien JSON (halaman login) tetap menerima kontrak lama; form HTML
+        // biasa diarahkan ke halaman login dengan sesi yang sudah dihapus.
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Logout berhasil.']);
+        }
+
+        return redirect()->route('login');
     }
 
     public function me(Request $request): UserResource
