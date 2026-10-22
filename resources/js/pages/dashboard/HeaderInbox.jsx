@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { ChatPrototype } from './ChatPrototype.jsx';
 
 // Items: { id, recipientId, title, body, readAt }. Supply authenticated data
 // from the backend when messaging is implemented; no demo unread indicators.
@@ -43,13 +44,13 @@ export function HeaderInbox({ userId, notifications = [], messages = [] }) {
                 {unread > 0 && <span className="dashboard-unread-dot" aria-hidden="true" />}
             </button>;
         })}
-        {open && <section id="dashboard-inbox-panel" className="dashboard-inbox-panel" aria-labelledby="dashboard-inbox-title">
+        {open && <section id="dashboard-inbox-panel" className={`dashboard-inbox-panel ${open === 'messages' ? 'dashboard-chat-panel' : ''}`} aria-labelledby="dashboard-inbox-title">
             <div className="dashboard-inbox-heading"><h2 id="dashboard-inbox-title">{labels[open]}</h2><button ref={closeButton} type="button" aria-label={`Tutup ${labels[open]}`} onClick={() => { triggers.current[open]?.focus(); setOpen(null); }}>×</button></div>
             {itemsFor(open).length ? <ul>{itemsFor(open).map(item => <li key={item.id} className={isUnread(open, item) ? 'is-unread' : ''}>
                 <h3>{item.title}</h3><p>{item.body}</p>
                 {isUnread(open, item) && <button type="button" onClick={() => setRead(previous => ({ ...previous, [open]: [...previous[open], item.id] }))}>Tandai dibaca</button>}
             </li>)}</ul> : <p className="dashboard-inbox-empty">{open === 'notifications' ? 'Belum ada notifikasi.' : 'Belum ada pesan masuk.'}</p>}
-            {open === 'messages' && <p className="dashboard-inbox-note">Fitur percakapan akan tersedia pada tahap berikutnya.</p>}
+            {open === 'messages' && <ChatPrototype />}
         </section>}
     </div>;
 }
