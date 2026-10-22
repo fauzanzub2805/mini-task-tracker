@@ -13,11 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Halaman dashboard mengarah ke login; endpoint API tetap JSON 401.
-        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('dashboard') ? route('login') : null);
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('dashboard', 'profile', 'profile/messages') ? route('login') : null);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Endpoint API tetap JSON; halaman frontend boleh mengembalikan HTML.
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => ! $request->is('/', 'login', 'dashboard', 'dashboard/preview') || $request->expectsJson(),
+            fn (Request $request) => ! $request->is('/', 'login', 'dashboard', 'dashboard/preview', 'profile', 'profile/messages') || $request->expectsJson(),
         );
     })->create();

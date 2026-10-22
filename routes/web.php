@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\DirectMessageController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\LoginPageController;
 use App\Http\Controllers\PriorityController;
@@ -27,6 +28,8 @@ Route::post('/auth/login', [AuthController::class, 'login'])->middleware('thrott
 // Perlu login (guard web, session cookie)
 Route::middleware('auth')->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
+    Route::view('/profile', 'dashboard')->name('profile');
+    Route::view('/profile/messages', 'dashboard')->name('profile.messages');
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
 
@@ -59,4 +62,15 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/projects/{project}/activities', [ActivityController::class, 'project']);
     Route::get('/tasks/{task}/activities', [ActivityController::class, 'task']);
+
+    // Pesan langsung untuk halaman Profile > Message.
+    Route::prefix('messaging')->name('messaging.')->group(function () {
+        Route::get('/users', [DirectMessageController::class, 'users'])->name('users.index');
+        Route::get('/conversations', [DirectMessageController::class, 'conversations'])->name('conversations.index');
+        Route::get('/users/{user}/messages', [DirectMessageController::class, 'messages'])->whereNumber('user')->name('users.messages.index');
+        Route::post('/users/{user}/messages', [DirectMessageController::class, 'store'])->whereNumber('user')->name('users.messages.store');
+        Route::post('/users/{user}/read', [DirectMessageController::class, 'read'])->whereNumber('user')->name('users.read');
+        Route::delete('/messages/{message}', [DirectMessageController::class, 'destroy'])->whereNumber('message')->name('messages.destroy');
+        Route::get('/messages/{message}/attachment', [DirectMessageController::class, 'attachment'])->whereNumber('message')->name('messages.attachment');
+    });
 });

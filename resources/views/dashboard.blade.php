@@ -4,20 +4,36 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
-    <title>Dashboard Preview · Rekayasa Task Tracker</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    @php
+        $page = match (true) {
+            request()->routeIs('profile.messages') => 'messages',
+            request()->routeIs('profile') => 'profile',
+            default => 'dashboard',
+        };
+        $isAppPage = request()->routeIs('dashboard', 'profile', 'profile.messages');
+        $account = $isAppPage ? request()->user() : null;
+        $dashboardOptions = [
+            'page' => $page,
+            'user' => $account ? [
+                'id' => $account->id,
+                'name' => $account->name,
+                'roles' => $account->getRoleNames()->values()->all(),
+            ] : null,
+        ];
+        $title = match ($page) {
+            'messages' => 'Message',
+            'profile' => 'Profile',
+            default => 'Dashboard Preview',
+        };
+    @endphp
+    <title>{{ $title }} · Rekayasa Task Tracker</title>
     @fonts
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/dashboard.jsx'])
 </head>
 <body class="font-sans antialiased">
-    @php
-        $account = request()->routeIs('dashboard') ? request()->user() : null;
-        $dashboardOptions = ['user' => $account ? [
-            'name' => $account->name,
-            'roles' => $account->getRoleNames()->values()->all(),
-        ] : null];
-    @endphp
     <div id="dashboard-app" data-dashboard='@json($dashboardOptions)'></div>
-    <noscript>Aktifkan JavaScript untuk melihat dashboard.</noscript>
+    <noscript>Aktifkan JavaScript untuk melihat halaman ini.</noscript>
 </body>
 </html>

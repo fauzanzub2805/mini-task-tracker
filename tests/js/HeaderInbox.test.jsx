@@ -1,57 +1,56 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { afterEach, expect, it } from 'vitest';
-import { DashboardApp } from '../../resources/js/pages/dashboard/DashboardApp.jsx';
+import { HeaderInbox } from '../../resources/js/pages/dashboard/HeaderInbox.jsx';
 
 afterEach(cleanup);
-const user = { id: 1, name: 'Dewi', roles: ['staff'] };
 const item = { id: 10, recipientId: 1, title: 'Task baru', body: 'Silakan review', readAt: null };
-it('opens and toggles working notification and chat panels without fake dots', () => {
-    render(<DashboardApp user={user} />);
-    const notifications = screen.getByRole('button', { name: 'Notifikasi' });
-    const chat = screen.getByRole('button', { name: 'Chat' });
+
+it('links the chat icon to Profile > Message and shows the real unread count', () => {
+    render(<HeaderInbox userId={1} chatUnread={4} />);
+    const chat = screen.getByRole('link', { name: 'Chat, 4 belum dibaca' });
+    expect(chat).toHaveAttribute('href', '/profile/messages');
+    expect(chat.querySelector('.dashboard-unread-count')).toHaveTextContent('4');
     expect(document.querySelectorAll('.dashboard-unread-dot')).toHaveLength(0);
+});
+
+it('opens the notification popup without a chat popup and marks items read', () => {
+    render(<HeaderInbox userId={1} notifications={[item]} />);
+    const notifications = screen.getByRole('button', { name: 'Notifikasi, 1 belum dibaca' });
     fireEvent.click(notifications);
-    expect(screen.getByText('Belum ada notifikasi.')).toBeVisible();
-    fireEvent.click(chat);
-    expect(screen.queryByText('Belum ada notifikasi.')).not.toBeInTheDocument();
-    expect(screen.getByText('Belum ada pesan masuk.')).toBeVisible();
-    fireEvent.click(chat);
-    expect(chat).toHaveAttribute('aria-expanded', 'false');
-});
-it('shows separate unread dots for current user and removes them after marking read', () => {
-    render(<DashboardApp user={user} notifications={[item]} messages={[{ ...item, id: 11, title: 'Halo' }]} />);
-    expect(document.querySelectorAll('.dashboard-unread-dot')).toHaveLength(2);
-    fireEvent.click(screen.getByRole('button', { name: 'Notifikasi, 1 belum dibaca' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Tandai dibaca' }));
-    expect(document.querySelectorAll('.dashboard-unread-dot')).toHaveLength(1);
-    expect(screen.getByRole('button', { name: 'Chat, 1 belum dibaca' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Chat, 1 belum dibaca' }));
+    expect(screen.getByRole('heading', { name: 'Notifikasi' })).toBeVisible();
+    expect(screen.getByText('Task baru')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Tandai dibaca' }));
     expect(document.querySelectorAll('.dashboard-unread-dot')).toHaveLength(0);
+    expect(notifications).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Tutup Notifikasi' }));
+    expect(notifications).toHaveAttribute('aria-expanded', 'false');
+    expect(notifications).toHaveFocus();
 });
-it('ignores other recipients and already read items and reacts to incoming data', () => {
-    const { rerender } = render(<DashboardApp user={user} notifications={[{ ...item, readAt: '2026-10-21' }]} messages={[{ ...item, recipientId: 2 }]} />);
+
+it('ignores other recipients, read items and the guest state', () => {
+    const { rerender } = render(<HeaderInbox userId={1} notifications={[{ ...item, readAt: '2026-10-21' }, { ...item, id: 11, recipientId: 2 }]} chatUnread={0} />);
     expect(document.querySelectorAll('.dashboard-unread-dot')).toHaveLength(0);
-    rerender(<DashboardApp user={user} notifications={[item]} />);
+    expect(screen.getByRole('link', { name: 'Chat' })).not.toHaveTextContent('4');
+
+    rerender(<HeaderInbox userId={1} notifications={[item]} />);
     expect(document.querySelectorAll('.dashboard-unread-dot')).toHaveLength(1);
-    rerender(<DashboardApp user={{ ...user, id: 2 }} notifications={[item]} />);
+
+    rerender(<HeaderInbox userId={null} notifications={[item]} chatUnread={7} />);
     expect(document.querySelectorAll('.dashboard-unread-dot')).toHaveLength(0);
-    fireEvent.click(screen.getByRole('button', { name: 'Notifikasi' }));
     expect(screen.queryByText('Task baru')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Chat, 7 belum dibaca' })).toBeInTheDocument();
 });
-it('closes on Escape, outside click and close button', () => {
-    render(<DashboardApp user={user} />);
-    const chat = screen.getByRole('button', { name: 'Chat' });
-    fireEvent.click(chat);
+
+it('closes the notification popup on Escape and outside click', () => {
+    render(<HeaderInbox userId={1} notifications={[item]} />);
+    const trigger = screen.getByRole('button', { name: 'Notifikasi, 1 belum dibaca' });
+    fireEvent.click(trigger);
     fireEvent.keyDown(document, { key: 'Escape' });
-    expect(chat).toHaveFocus();
-    expect(chat).toHaveAttribute('aria-expanded', 'false');
-    fireEvent.click(chat);
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(trigger).toHaveFocus();
+
+    fireEvent.click(trigger);
     fireEvent.pointerDown(document.body);
-    expect(chat).toHaveAttribute('aria-expanded', 'false');
-    fireEvent.click(chat);
-    fireEvent.click(screen.getByRole('button', { name: 'Tutup Chat' }));
-    expect(chat).toHaveFocus();
-    expect(chat).toHaveAttribute('aria-expanded', 'false');
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
 });
