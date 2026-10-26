@@ -377,6 +377,16 @@ function CommentsPanel({ taskId, members, dirtyRef, onChanged }) {
                     disabled={sending}
                     onClick={() => setMenuOpen(open => !open)}
                 >+</button>
+            {menuOpen && <div ref={menuRef} className="projects-comment-menu" role="menu" aria-label="Lampiran komentar">
+                <button type="button" role="menuitem" disabled={sending} onClick={() => { setMenuOpen(false); fileInputRef.current?.click(); }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h2.4c.6 0 1.1.3 1.4.8l.7 1.2H17.5A2.5 2.5 0 0 1 20 8.5v9A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-11Z" /><path d="M12 10.5v5M9.5 13h5" /></svg>
+                    Upload Files
+                </button>
+                <button type="button" role="menuitem" disabled={sending} onClick={() => { setMenuOpen(false); imageInputRef.current?.click(); }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5" /><circle cx="9" cy="9.5" r="1.5" /><path d="m5 16 3.5-3.2a1.6 1.6 0 0 1 2.2.1L15 17" /><path d="m13.5 15.5 1.6-1.5a1.6 1.6 0 0 1 2.2.1l1.7 1.6" /></svg>
+                    Add Image
+                </button>
+            </div>}
                 <input
                     ref={fileInputRef}
                     type="file"
@@ -401,16 +411,6 @@ function CommentsPanel({ taskId, members, dirtyRef, onChanged }) {
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m21 3-6 18-4-8-8-4 18-6Z" /><path d="m11 13 10-10" /></svg>
                 </button>
             </div>
-            {menuOpen && <div ref={menuRef} className="projects-comment-menu" role="menu" aria-label="Lampiran komentar">
-                <button type="button" role="menuitem" disabled={sending} onClick={() => { setMenuOpen(false); fileInputRef.current?.click(); }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h2.4c.6 0 1.1.3 1.4.8l.7 1.2H17.5A2.5 2.5 0 0 1 20 8.5v9A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-11Z" /><path d="M12 10.5v5M9.5 13h5" /></svg>
-                    Upload Files
-                </button>
-                <button type="button" role="menuitem" disabled={sending} onClick={() => { setMenuOpen(false); imageInputRef.current?.click(); }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5" /><circle cx="9" cy="9.5" r="1.5" /><path d="m5 16 3.5-3.2a1.6 1.6 0 0 1 2.2.1L15 17" /><path d="m13.5 15.5 1.6-1.5a1.6 1.6 0 0 1 2.2.1l1.7 1.6" /></svg>
-                    Add Image
-                </button>
-            </div>}
             {suggestions.length > 0 && <ul className="projects-mention-menu" role="listbox" aria-label="Saran mention">
                 {suggestions.map(member => <li key={member.user_id}>
                     <button type="button" role="option" aria-selected={false} onClick={() => pickMention(member)}>
