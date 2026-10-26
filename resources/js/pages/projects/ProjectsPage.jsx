@@ -392,13 +392,7 @@ export function ProjectsPage({ user = null, path }) {
 
     return <div className="projects-page">
         <div className="projects-heading">
-            <h1>
-                <a href="/projects" onClick={event => { event.preventDefault(); navigate('/projects'); }}>Projects</a>
-                {projectId && project && <> <span aria-hidden="true">→</span>{' '}
-                    <a href={`/projects/${project.id}`} onClick={event => { event.preventDefault(); navigate(`/projects/${project.id}`); }}>{project.name}</a></>}
-                {taskId && <> <span aria-hidden="true">→</span>{' '}
-                    <span className="projects-heading-current">{taskTitle ?? 'Task Detail'}</span></>}
-            </h1>
+            <h1>{taskId ? (taskTitle ?? 'Task Detail') : projectId ? (project?.name ?? 'Project') : view === 'tasks' ? 'Tasks' : view === 'teams' ? 'Teams' : 'Project'}</h1>
         </div>
 
         <Toolbar

@@ -163,6 +163,7 @@ it('renders project cards, filters by search, sorts, and opens the create form',
     setup();
     render(<ProjectsPage user={manager} path="/projects" />);
 
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/^Project$/);
     expect(await screen.findByText('Google Vendor')).toBeInTheDocument();
     expect(screen.getAllByRole('img', { name: 'Insert Image' })).toHaveLength(3);
     expect(screen.getByText('(No detailed information of project)')).toBeInTheDocument();
@@ -187,7 +188,7 @@ it('shows project tasks with priority and status, and switches to activity and s
     setup();
     render(<ProjectsPage user={manager} path="/projects/1" />);
 
-    expect(await screen.findByRole('heading', { name: 'Google Vendor' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Google Vendor', level: 1 })).toBeInTheDocument();
     expect(screen.getByText('Project Deadline : 20 September 2026')).toBeInTheDocument();
     expect(screen.getByText('High')).toBeInTheDocument();
     expect(screen.getByText('Urgent')).toBeInTheDocument();
@@ -208,6 +209,8 @@ it('uses a functional calendar and saves the edited task', async () => {
     render(<ProjectsPage user={manager} path="/projects/1/tasks/11" />);
 
     const title = await screen.findByDisplayValue('Fiksasi Tim Google');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/^Fiksasi Tim Google$/);
+    expect(screen.getByRole('heading', { level: 1 })).not.toHaveTextContent('→');
     expect(await screen.findByText('September 2026')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Bulan berikutnya' }));
@@ -311,7 +314,7 @@ it('lets a project manager add an existing user to the project', async () => {
     const { state } = setup();
     render(<ProjectsPage user={manager} path="/projects/1" />);
 
-    await screen.findByRole('heading', { name: 'Google Vendor' });
+    await screen.findByRole('heading', { name: 'Google Vendor', level: 1 });
     fireEvent.click(screen.getByRole('tab', { name: 'Project Setting' }));
 
     const select = await screen.findByLabelText('Add existing user');
@@ -329,13 +332,13 @@ it('disables the create-task assignee selector when the user cannot manage the p
     const { state } = setup();
     const { unmount } = render(<ProjectsPage user={manager} path="/projects/1" />);
 
-    await screen.findByRole('heading', { name: 'Google Vendor' });
+    await screen.findByRole('heading', { name: 'Google Vendor', level: 1 });
     fireEvent.click(screen.getByRole('button', { name: 'Add New Task' }));
     expect(screen.getByLabelText('Assignee')).toBeEnabled();
     unmount();
 
     render(<ProjectsPage user={staff} path="/projects/1" />);
-    await screen.findByRole('heading', { name: 'Google Vendor' });
+    await screen.findByRole('heading', { name: 'Google Vendor', level: 1 });
     fireEvent.click(screen.getByRole('button', { name: 'Add New Task' }));
     expect(screen.getByLabelText('Assignee')).toBeDisabled();
 
@@ -372,7 +375,7 @@ it('keeps settings drafts when polling refreshes the project', async () => {
     const { state, fetchMock } = setup();
     render(<ProjectsPage user={manager} path="/projects/1" />);
 
-    await screen.findByRole('heading', { name: 'Google Vendor' });
+    await screen.findByRole('heading', { name: 'Google Vendor', level: 1 });
     fireEvent.click(screen.getByRole('tab', { name: 'Project Setting' }));
     const name = screen.getByLabelText('Project Name');
     fireEvent.change(name, { target: { value: 'Draft Nama Project' } });
