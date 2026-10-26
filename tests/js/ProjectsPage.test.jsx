@@ -7,7 +7,25 @@ afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, writable: true, value: originalObjectUrls.create });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, writable: true, value: originalObjectUrls.revoke });
 });
+
+const originalObjectUrls = { create: URL.createObjectURL, revoke: URL.revokeObjectURL };
+
+function stubObjectUrls() {
+    const create = vi.fn(() => 'blob:preview');
+    const revoke = vi.fn();
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, writable: true, value: create });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, writable: true, value: revoke });
+    return { create, revoke };
+}
+
+function makeFile(name, size, type = 'application/octet-stream') {
+    const file = new File(['x'], name, { type });
+    Object.defineProperty(file, 'size', { value: size });
+    return file;
+}
 
 const manager = { id: 1, name: 'Fulan bin Fulan', roles: ['manager'] };
 const staff = { id: 2, name: 'Dewi Anggraini', roles: ['staff'] };
@@ -69,6 +87,8 @@ function setup() {
         projectName: project1.name,
         lastPatch: null,
         lastComment: null,
+        lastCommentContentType: null,
+        comments: [...baseComments],
         lastMember: null,
         lastTaskCreate: null,
         uploadedFiles: null,
@@ -98,7 +118,7 @@ function setup() {
             case 'GET /tasks/11':
                 return respond({ data: taskDetail() });
             case 'GET /tasks/11/comments':
-                return respond(paged(baseComments));
+                return respond(paged(state.comments));
             case 'GET /users':
                 return respond(paged(directory));
             case 'POST /projects/1/members':
@@ -113,9 +133,21 @@ function setup() {
             case 'POST /tasks/11/attachments':
                 state.uploadedFiles = options.body.getAll('files[]').map(file => file.name);
                 return respond({ data: [] }, 201);
-            case 'POST /tasks/11/comments':
-                state.lastComment = JSON.parse(options.body);
-                return respond({ data: { id: 2, task_id: 11, author_id: 1, author: { id: 1, name: 'Fulan bin Fulan' }, body: state.lastComment.body, created_at: '2026-09-18T10:00:00+00:00' } }, 201);
+            case 'POST /tasks/11/comments': {
+                // Komentar tanpa lampiran tetap JSON; dengan lampiran multipart.
+                const form = options.body instanceof FormData ? options.body : null;
+                state.lastCommentContentType = options.headers?.['Content-Type'] ?? null;
+                state.lastComment = form
+                    ? {
+                        body: form.get('body'),
+                        mention_ids: form.getAll('mention_ids[]').map(Number),
+                        files: form.getAll('files[]').map(file => file.name),
+                    }
+                    : JSON.parse(options.body);
+                const created = { id: 2, task_id: 11, author_id: 1, author: { id: 1, name: 'Fulan bin Fulan' }, body: state.lastComment.body, created_at: '2026-09-18T10:00:00+00:00', attachments: [] };
+                state.comments = [...state.comments, created];
+                return respond({ data: created }, 201);
+            }
             case 'POST /projects':
                 return respond({ data: { id: 9, name: JSON.parse(options.body).name, description: JSON.parse(options.body).description } }, 201);
             default:
@@ -242,7 +274,7 @@ it('renders comments in their own tab and sends @mentions of project members', a
 
     const composer = screen.getByRole('textbox', { name: 'Tulis komentar' });
     expect(composer).toHaveAttribute('rows', '1');
-    expect(composer.parentElement).toContainElement(screen.getByRole('button', { name: 'Sisipkan mention' }));
+    expect(composer.parentElement).toContainElement(screen.getByRole('button', { name: 'Tambah lampiran' }));
     expect(composer.parentElement).not.toContainElement(screen.getByRole('button', { name: 'Kirim komentar' }));
     fireEvent.change(composer, { target: { value: 'Halo @Ek' } });
     fireEvent.click(await screen.findByRole('option', { name: /Eka Prasetyo/ }));
@@ -350,4 +382,165 @@ it('keeps settings drafts when polling refreshes the project', async () => {
 
     await waitFor(() => expect(fetchMock.mock.calls.filter(([url]) => String(url) === '/projects/1').length).toBeGreaterThan(1));
     expect(name).toHaveValue('Draft Nama Project');
+});
+
+async function openComments() {
+    render(<ProjectsPage user={manager} path="/projects/1/tasks/11" />);
+    await screen.findByDisplayValue('Fiksasi Tim Google');
+    fireEvent.click(screen.getByRole('tab', { name: 'Comments' }));
+    await screen.findByText('Dokumennya kurang lengkap');
+}
+
+function openFileMenu(name = 'Upload Files') {
+    fireEvent.click(screen.getByRole('button', { name: 'Tambah lampiran' }));
+    fireEvent.click(screen.getByRole('menuitem', { name }));
+}
+
+it('renders comment attachment links and image previews', async () => {
+    const { state } = setup();
+    state.comments = [...baseComments, {
+        id: 3,
+        task_id: 11,
+        author_id: 2,
+        author: { id: 2, name: 'Dewi Anggraini' },
+        body: '',
+        created_at: '2026-09-18T09:20:00+00:00',
+        attachments: [
+            { id: 7, name: 'mockup.png', size: 2048, mime_type: 'image/png', url: '/tasks/11/comments/3/attachments/7', preview_url: '/tasks/11/comments/3/attachments/7/preview' },
+            { id: 8, name: 'brief.pdf', size: 4096, mime_type: 'application/pdf', url: '/tasks/11/comments/3/attachments/8', preview_url: null },
+        ],
+    }];
+
+    await openComments();
+
+    const preview = screen.getByRole('link', { name: 'Pratinjau mockup.png' });
+    expect(preview).toHaveAttribute('href', '/tasks/11/comments/3/attachments/7');
+    expect(preview.querySelector('img')).toHaveAttribute('src', '/tasks/11/comments/3/attachments/7/preview');
+
+    expect(screen.getByRole('link', { name: /^mockup\.png/ })).toHaveAttribute('href', '/tasks/11/comments/3/attachments/7');
+    expect(screen.getByRole('link', { name: /^brief\.pdf/ })).toHaveAttribute('href', '/tasks/11/comments/3/attachments/8');
+    expect(screen.queryByRole('link', { name: 'Pratinjau brief.pdf' })).toBeNull();
+});
+
+it('opens the attachment menu above the composer and closes it on Escape or outside click', async () => {
+    setup();
+    await openComments();
+
+    const trigger = screen.getByRole('button', { name: 'Tambah lampiran' });
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('menu', { name: 'Lampiran komentar' })).toBeNull();
+
+    fireEvent.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('menuitem', { name: 'Upload Files' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Add Image' })).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('menu', { name: 'Lampiran komentar' })).toBeNull();
+
+    fireEvent.click(trigger);
+    expect(screen.getByRole('menu', { name: 'Lampiran komentar' })).toBeInTheDocument();
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByRole('menu', { name: 'Lampiran komentar' })).toBeNull();
+});
+
+it('submits a file-only comment as multipart data without forcing Content-Type', async () => {
+    const { state } = setup();
+    await openComments();
+
+    openFileMenu();
+    fireEvent.change(screen.getByLabelText('Pilih berkas lampiran'), {
+        target: { files: [makeFile('brief.pdf', 2048, 'application/pdf')] },
+    });
+
+    expect(document.querySelector('.projects-composer-pending')).toHaveTextContent(/brief\.pdf/);
+    expect(screen.getByRole('button', { name: 'Kirim komentar' })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim komentar' }));
+    await waitFor(() => expect(state.lastComment).not.toBeNull());
+    expect(state.lastComment).toEqual({ body: '', mention_ids: [], files: ['brief.pdf'] });
+    expect(state.lastCommentContentType).toBeFalsy();
+    await waitFor(() => expect(document.querySelector('.projects-composer-pending')).toBeNull());
+});
+
+it('sends multiple images together with mentions as multipart', async () => {
+    const { state } = setup();
+    await openComments();
+
+    const composer = screen.getByRole('textbox', { name: 'Tulis komentar' });
+    fireEvent.change(composer, { target: { value: 'Halo @Ek' } });
+    fireEvent.click(await screen.findByRole('option', { name: /Eka Prasetyo/ }));
+
+    openFileMenu('Add Image');
+    fireEvent.change(screen.getByLabelText('Pilih gambar lampiran'), {
+        target: { files: [makeFile('shot.png', 1024, 'image/png'), makeFile('logo.webp', 1536, 'image/webp')] },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim komentar' }));
+    await waitFor(() => expect(state.lastComment).not.toBeNull());
+    expect(state.lastComment).toEqual({
+        body: 'Halo @Eka Prasetyo',
+        mention_ids: [3],
+        files: ['shot.png', 'logo.webp'],
+    });
+    expect(composer).toHaveValue('');
+});
+
+it('rejects attachments larger than 10 MB and keeps the accepted ones', async () => {
+    setup();
+    await openComments();
+
+    openFileMenu();
+    fireEvent.change(screen.getByLabelText('Pilih berkas lampiran'), {
+        target: { files: [makeFile('huge.zip', 10 * 1024 * 1024 + 1, 'application/zip'), makeFile('ok.txt', 12, 'text/plain')] },
+    });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('huge.zip melebihi batas 10 MB per file.');
+    const chips = document.querySelector('.projects-composer-pending');
+    expect(chips).toHaveTextContent(/ok\.txt/);
+    expect(chips).not.toHaveTextContent(/huge\.zip/);
+});
+
+it('previews raster attachments and revokes their object URL when removed', async () => {
+    const { create, revoke } = stubObjectUrls();
+    setup();
+    await openComments();
+
+    openFileMenu('Add Image');
+    fireEvent.change(screen.getByLabelText('Pilih gambar lampiran'), {
+        target: { files: [makeFile('shot.png', 1024, 'image/png')] },
+    });
+
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('.projects-composer-thumb')).toHaveAttribute('src', 'blob:preview');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hapus shot.png' }));
+    expect(revoke).toHaveBeenCalledWith('blob:preview');
+    expect(document.querySelector('.projects-composer-pending')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Kirim komentar' })).toBeDisabled();
+});
+
+it('keeps sending state from changing pending attachments', async () => {
+    const { state } = setup();
+    let release;
+    const gate = new Promise(resolve => { release = resolve; });
+    const inner = globalThis.fetch;
+    vi.stubGlobal('fetch', (url, options) => (String(url) === '/tasks/11/comments' && (options?.method ?? 'GET').toUpperCase() === 'POST'
+        ? gate.then(() => inner(url, options))
+        : inner(url, options)));
+    await openComments();
+
+    openFileMenu();
+    fireEvent.change(screen.getByLabelText('Pilih berkas lampiran'), {
+        target: { files: [makeFile('brief.pdf', 2048, 'application/pdf')] },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim komentar' }));
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Kirim komentar' })).toBeDisabled());
+    expect(screen.getByRole('button', { name: 'Tambah lampiran' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Hapus brief.pdf' })).toBeDisabled();
+
+    release();
+    await waitFor(() => expect(state.lastComment).not.toBeNull());
+    expect(screen.getByRole('button', { name: 'Tambah lampiran' })).toBeEnabled();
 });

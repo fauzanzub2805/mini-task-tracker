@@ -22,6 +22,7 @@ class CommentResource extends JsonResource
                 ->map(fn ($user) => ['id' => $user->id, 'name' => $user->name])
                 ->values()
                 ->all()),
+            'attachments' => CommentAttachmentResource::collection($this->whenLoaded('attachments')),
             'created_at' => $this->created_at,
         ];
     }

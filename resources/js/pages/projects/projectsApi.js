@@ -116,7 +116,19 @@ export const projectsApi = {
 
     // PRD melarang penghapusan komentar, jadi tidak ada endpoint hapus di sini.
     comments: (taskId, options) => allPages(`/tasks/${taskId}/comments`, options),
-    addComment: (taskId, payload, options) => request(`/tasks/${taskId}/comments`, { ...options, method: 'POST', body: payload }),
+    // Komentar tanpa lampiran tetap JSON (payload lama dipertahankan). Begitu
+    // `files` ada, payload dikirim sebagai multipart: body, mention_ids[],
+    // files[]; request() otomatis membiarkan browser menyusun Content-Type.
+    addComment: (taskId, payload = {}, options) => {
+        let body = payload;
+        if (Array.isArray(payload.files)) {
+            body = new FormData();
+            body.append('body', payload.body ?? '');
+            (payload.mention_ids ?? []).forEach(id => body.append('mention_ids[]', String(id)));
+            payload.files.forEach(file => body.append('files[]', file, file.name));
+        }
+        return request(`/tasks/${taskId}/comments`, { ...options, method: 'POST', body });
+    },
 
     uploadAttachments: (taskId, files, options) => {
         const form = new FormData();

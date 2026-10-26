@@ -42,6 +42,46 @@ function CommentBody({ body, names }) {
     </div>;
 }
 
+function CommentAttachments({ attachments }) {
+    if (!attachments?.length) return null;
+    return <ul className="projects-comment-attachments" aria-label="Lampiran komentar">
+        {attachments.map(attachment => <CommentAttachmentItem key={attachment.id} attachment={attachment} />)}
+    </ul>;
+}
+
+function CommentAttachmentItem({ attachment }) {
+    const [previewFailed, setPreviewFailed] = useState(false);
+    const preview = attachment.preview_url;
+
+    return <li>
+        {preview && !previewFailed && <a
+            className="projects-comment-attachment-thumb"
+            href={attachment.url}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`Pratinjau ${attachment.name}`}
+        >
+            <img src={preview} alt="" loading="lazy" onError={() => setPreviewFailed(true)} />
+        </a>}
+        <a className="projects-comment-attachment-file" href={attachment.url} target="_blank" rel="noreferrer">
+            {attachment.name} <small>{formatFileSize(attachment.size)}</small>
+        </a>
+    </li>;
+}
+
+// Thumbnail hanya untuk gambar raster; SVG dan berkas lain tetap berupa tautan.
+const RASTER_MIME = /^image\/(?:png|jpe?g|gif|webp|bmp)$/i;
+const RASTER_EXTENSION = /\.(?:png|jpe?g|gif|webp|bmp)$/i;
+
+function isRasterImage(file) {
+    const type = file?.type ?? '';
+    return type ? RASTER_MIME.test(type) : RASTER_EXTENSION.test(file?.name ?? '');
+}
+
+function revokePreview(item) {
+    if (item?.preview && typeof URL.revokeObjectURL === 'function') URL.revokeObjectURL(item.preview);
+}
+
 function PrioritySelect({ value, options, onChange }) {
     const [open, setOpen] = useState(false);
     const current = options.find(option => String(option.id) === String(value));
@@ -138,8 +178,18 @@ function CommentsPanel({ taskId, members, dirtyRef, onChanged }) {
     const [draft, setDraft] = useState('');
     const [mentionIds, setMentionIds] = useState([]);
     const [mentionQuery, setMentionQuery] = useState(null);
+    const [pending, setPending] = useState([]);
     const [sending, setSending] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
     const inputRef = useRef(null);
+    const menuRef = useRef(null);
+    const triggerRef = useRef(null);
+    const fileInputRef = useRef(null);
+    const imageInputRef = useRef(null);
+    // Dibaca saat unmount/kirim agar objectURL thumbnail selalu dicabut.
+    const pendingRef = useRef(pending);
+    pendingRef.current = pending;
+    const pendingKey = useRef(0);
 
     const load = useCallback(async signal => {
         try {
@@ -204,14 +254,71 @@ function CommentsPanel({ taskId, members, dirtyRef, onChanged }) {
         inputRef.current?.focus();
     }
 
+    useEffect(() => () => {
+        pendingRef.current.forEach(item => revokePreview(item));
+    }, []);
+
+    // Menu lampiran ditutup oleh klik di luar maupun tombol Escape.
+    useEffect(() => {
+        if (!menuOpen) return undefined;
+        const onPointerDown = event => {
+            if (menuRef.current?.contains(event.target) || triggerRef.current?.contains(event.target)) return;
+            setMenuOpen(false);
+        };
+        const onKeyDown = event => {
+            if (event.key !== 'Escape') return;
+            setMenuOpen(false);
+            triggerRef.current?.focus();
+        };
+        document.addEventListener('mousedown', onPointerDown);
+        document.addEventListener('keydown', onKeyDown);
+        return () => {
+            document.removeEventListener('mousedown', onPointerDown);
+            document.removeEventListener('keydown', onKeyDown);
+        };
+    }, [menuOpen]);
+
+    function addFiles(fileList) {
+        const files = Array.from(fileList ?? []);
+        if (!files.length) return;
+        const tooBig = files.filter(file => file.size > MAX_FILE_BYTES);
+        const accepted = files.filter(file => file.size <= MAX_FILE_BYTES);
+        setError(tooBig.length ? `${tooBig.map(file => file.name).join(', ')} melebihi batas 10 MB per file.` : '');
+        if (!accepted.length) return;
+        const additions = accepted.map(file => ({
+            key: `pending-${(pendingKey.current += 1)}`,
+            file,
+            preview: isRasterImage(file) && typeof URL.createObjectURL === 'function'
+                ? URL.createObjectURL(file)
+                : null,
+        }));
+        setPending(current => [...current, ...additions]);
+    }
+
+    function removePending(key) {
+        const target = pending.find(item => item.key === key);
+        revokePreview(target);
+        setPending(current => current.filter(item => item.key !== key));
+    }
+
     async function send(event) {
         event.preventDefault();
+        if (sending) return;
         const body = draft.trim();
-        if (!body || sending) return;
+        const files = pending.map(item => item.file);
+        // Komentar boleh hanya berisi lampiran; teks saja juga tetap sah.
+        if (!body && files.length === 0) {
+            setError('Tulis komentar atau lampirkan minimal satu file.');
+            return;
+        }
         setSending(true); setError('');
+        const payload = { body, mention_ids: mentionIds };
+        if (files.length) payload.files = files;
         try {
-            await projectsApi.addComment(taskId, { body, mention_ids: mentionIds });
-            setDraft(''); setMentionIds([]); setMentionQuery(null);
+            await projectsApi.addComment(taskId, payload);
+            pendingRef.current.forEach(item => revokePreview(item));
+            setPending([]);
+            setDraft(''); setMentionIds([]); setMentionQuery(null); setMenuOpen(false);
             await load();
             notifyProjectsChanged();
             onChanged?.();
@@ -231,7 +338,8 @@ function CommentsPanel({ taskId, members, dirtyRef, onChanged }) {
                 <div className="projects-comment-content">
                 <div className="projects-comment-bubble">
                     <div className="projects-comment-author">{comment.author?.name ?? 'Pengguna'}</div>
-                    <CommentBody body={comment.body} names={members.map(member => member.user?.name).filter(Boolean)} />
+                    {comment.body ? <CommentBody body={comment.body} names={members.map(member => member.user?.name).filter(Boolean)} /> : null}
+                    <CommentAttachments attachments={comment.attachments} />
                 </div>
                 <div className="projects-comment-meta">
                     <time dateTime={comment.created_at}>{formatCommentStamp(comment.created_at)}</time>
@@ -241,22 +349,68 @@ function CommentsPanel({ taskId, members, dirtyRef, onChanged }) {
         </ul>
 
         <form className="projects-composer" onSubmit={send}>
+            {pending.length > 0 && <ul className="projects-composer-pending" aria-label="Lampiran yang akan dikirim">
+                {pending.map(item => <li key={item.key}>
+                    {item.preview && <img className="projects-composer-thumb" src={item.preview} alt="" />}
+                    <span className="projects-composer-file">{item.file.name} <small>{formatFileSize(item.file.size)}</small></span>
+                    <button type="button" aria-label={`Hapus ${item.file.name}`} disabled={sending} onClick={() => removePending(item.key)}>×</button>
+                </li>)}
+            </ul>}
             <div className="projects-composer-row">
                 <div className="projects-composer-input">
                 <textarea
                     ref={inputRef}
                     aria-label="Tulis komentar"
                     placeholder="Type here to make a comments..."
+                    disabled={sending}
                     rows={1}
                     value={draft}
                     onChange={onDraftChange}
                 />
-                <button type="button" className="projects-composer-add" aria-label="Sisipkan mention" aria-expanded={mentionQuery !== null || suggestions.length > 0} onClick={() => { setMentionQuery(''); inputRef.current?.focus(); }}>+</button>
+                <button
+                    ref={triggerRef}
+                    type="button"
+                    className="projects-composer-add"
+                    aria-label="Tambah lampiran"
+                    aria-haspopup="menu"
+                    aria-expanded={menuOpen}
+                    disabled={sending}
+                    onClick={() => setMenuOpen(open => !open)}
+                >+</button>
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    hidden
+                    aria-label="Pilih berkas lampiran"
+                    disabled={sending}
+                    onChange={event => { addFiles(event.target.files); event.target.value = ''; }}
+                />
+                <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    hidden
+                    aria-label="Pilih gambar lampiran"
+                    disabled={sending}
+                    onChange={event => { addFiles(event.target.files); event.target.value = ''; }}
+                />
                 </div>
-                <button type="submit" className="projects-composer-send" aria-label="Kirim komentar" disabled={sending || !draft.trim()}>
+                <button type="submit" className="projects-composer-send" aria-label="Kirim komentar" disabled={sending || (!draft.trim() && pending.length === 0)}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m21 3-6 18-4-8-8-4 18-6Z" /><path d="m11 13 10-10" /></svg>
                 </button>
             </div>
+            {menuOpen && <div ref={menuRef} className="projects-comment-menu" role="menu" aria-label="Lampiran komentar">
+                <button type="button" role="menuitem" disabled={sending} onClick={() => { setMenuOpen(false); fileInputRef.current?.click(); }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h2.4c.6 0 1.1.3 1.4.8l.7 1.2H17.5A2.5 2.5 0 0 1 20 8.5v9A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-11Z" /><path d="M12 10.5v5M9.5 13h5" /></svg>
+                    Upload Files
+                </button>
+                <button type="button" role="menuitem" disabled={sending} onClick={() => { setMenuOpen(false); imageInputRef.current?.click(); }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5" /><circle cx="9" cy="9.5" r="1.5" /><path d="m5 16 3.5-3.2a1.6 1.6 0 0 1 2.2.1L15 17" /><path d="m13.5 15.5 1.6-1.5a1.6 1.6 0 0 1 2.2.1l1.7 1.6" /></svg>
+                    Add Image
+                </button>
+            </div>}
             {suggestions.length > 0 && <ul className="projects-mention-menu" role="listbox" aria-label="Saran mention">
                 {suggestions.map(member => <li key={member.user_id}>
                     <button type="button" role="option" aria-selected={false} onClick={() => pickMention(member)}>

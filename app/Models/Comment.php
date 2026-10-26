@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['task_id', 'author_id', 'body'])]
 class Comment extends Model
@@ -24,5 +25,11 @@ class Comment extends Model
     public function mentions(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'comment_mentions')->withPivot('created_at');
+    }
+
+    /** File yang diunggah bersama komentar ini (disk privat). */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(CommentAttachment::class)->orderBy('id');
     }
 }

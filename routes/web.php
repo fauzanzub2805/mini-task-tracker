@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CommentAttachmentController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DirectMessageController;
 use App\Http\Controllers\InvitationController;
@@ -66,6 +67,12 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/tasks/{task}/comments', [CommentController::class, 'index']);
     Route::post('/tasks/{task}/comments', [CommentController::class, 'store']);
+
+    // Lampiran komentar privat: terikat komentar, hanya untuk anggota project.
+    Route::get('/tasks/{task}/comments/{comment}/attachments/{attachment}', [CommentAttachmentController::class, 'download'])
+        ->name('comments.attachments.download');
+    Route::get('/tasks/{task}/comments/{comment}/attachments/{attachment}/preview', [CommentAttachmentController::class, 'preview'])
+        ->name('comments.attachments.preview');
 
     Route::get('/projects/{project}/activities', [ActivityController::class, 'project']);
     Route::get('/tasks/{task}/activities', [ActivityController::class, 'task']);
