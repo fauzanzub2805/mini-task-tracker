@@ -171,24 +171,26 @@
 .projects-files .projects-file-box { min-height: 235px; }
 
 /* Komentar */
-.projects-comments { display: grid; gap: 20px; align-content: start; min-height: 360px; }
-.projects-comment-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; }
-.projects-comment { max-width: min(62%, 640px); background: #e8eff5; border-radius: 10px; overflow: hidden; }
-.projects-comment-author { padding: 9px 20px; background: #d4d4d4; font-size: 17px; font-weight: 500; }
-.projects-comment-body { padding: 14px 20px; font-size: 17px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
-.projects-mention { background: transparent; color: #2d6cdf; font-weight: 500; }
-.projects-comment-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 4px 0; font-size: 12px; color: #172237; }
-.projects-comment-meta { margin: -14px 0 0 4px; padding-top: 8px; }
-.projects-comment-delete { font-size: 11px; color: #61748d; }
-.projects-comment-delete:hover { color: #a3121f; text-decoration: underline; }
-.projects-composer { align-self: end; margin-top: auto; }
-.projects-composer-row { display: flex; align-items: flex-end; gap: 10px; }
-.projects-composer-add { display: grid; place-items: center; flex-shrink: 0; width: 42px; height: 44px; border-radius: 8px; background: #f13d31; color: #fff; font-size: 22px; }
-.projects-composer textarea { flex: 1; min-width: 0; min-height: 46px; max-height: 160px; resize: vertical; padding: 12px 16px; border-radius: 5px; background: #eff4fc; font-size: 14px; color: #172237; }
-.projects-composer-send { display: grid; place-items: center; flex-shrink: 0; width: 46px; height: 46px; border-radius: 8px; background: #f13d31; color: #fff; font-size: 18px; }
-.projects-composer-send:disabled { opacity: .45; cursor: not-allowed; }
+.projects-panel:has(.projects-comments) { padding: 64px 10.5% 34px; min-height: 680px; }
+.projects-comments { display: flex; flex-direction: column; min-height: 582px; gap: 28px; }
+.projects-comment-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 46px; }
+.projects-comment { width: fit-content; max-width: 78%; min-width: min(300px, 100%); }
+.projects-comment-bubble { background: #e2e8f0; border-radius: 28px; overflow: hidden; }
+.projects-comment-author { padding: 12px 24px; background: #d9d9d9; font-size: 21px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.projects-comment-body { padding: 14px 24px 20px; font-size: 26px; line-height: 1.8; white-space: pre-wrap; overflow-wrap: anywhere; }
+.projects-mention { background: transparent; color: #4549ff; font-weight: 400; }
+.projects-comment-meta { margin: 8px 10px 0; font-size: 17px; font-weight: 600; line-height: 1.5; color: #111827; }
+.projects-composer { position: relative; width: 90%; align-self: center; margin-top: auto; padding-top: 96px; }
+.projects-composer-row { display: flex; align-items: flex-end; gap: 16px; }
+.projects-composer-input { display: flex; align-items: flex-end; flex: 1; min-width: 0; padding: 4px; background: #eff4fc; border: 1px solid #dce3ee; border-radius: 5px; }
+.projects-composer textarea { flex: 1; width: 0; min-width: 0; min-height: 36px; max-height: 160px; resize: vertical; padding: 8px 12px; border: 0; background: transparent; font-size: 14px; line-height: 20px; color: #172237; }
+.projects-composer textarea::placeholder { color: #61748d; opacity: 1; }
+.projects-composer-add { display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 36px; border-radius: 7px; background: #f13d31; color: #fff; font-size: 22px; font-weight: 400; }
+.projects-composer-send { display: grid; place-items: center; flex-shrink: 0; width: 46px; height: 46px; border-radius: 5px; background: #f13d31; color: #fff; }
+.projects-composer-send:disabled { cursor: not-allowed; }
+.projects-composer-send:hover:not(:disabled), .projects-composer-add:hover { background: #d83227; }
 .projects-composer-hint { margin: 6px 0 0; font-size: 11px; color: #61748d; }
-.projects-mention-menu { position: relative; z-index: 20; list-style: none; margin: 6px 0 0; padding: 6px; background: #fff; border: 1px solid #dce3ee; border-radius: 8px; box-shadow: 0 10px 24px #1722371f; }
+.projects-mention-menu { position: absolute; bottom: calc(100% - 90px); left: 0; z-index: 20; width: min(360px, 100%); max-height: 240px; overflow-y: auto; list-style: none; margin: 0 0 8px; padding: 6px; background: #fff; border: 1px solid #dce3ee; border-radius: 8px; box-shadow: 0 10px 24px #1722371f; }
 .projects-mention-menu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 5px; font-size: 13px; text-align: left; }
 .projects-mention-menu button:hover { background: #eff4fc; }
 
@@ -233,7 +235,15 @@
     .projects-task-row { grid-template-columns: minmax(0, 1fr) auto; }
     .projects-task-row .projects-priority-pill { grid-column: 1 / -1; width: fit-content; }
     .projects-inline-field { flex-wrap: wrap; }
+    .projects-panel:has(.projects-comments) { padding: 28px 18px 24px; min-height: 520px; }
+    .projects-comments { min-height: 468px; }
     .projects-comment { max-width: 100%; }
+    .projects-comment-list { gap: 30px; }
+    .projects-comment-author { font-size: 17px; padding: 12px 18px; }
+    .projects-comment-body { font-size: 18px; padding: 12px 18px 16px; line-height: 1.65; }
+    .projects-comment-meta { font-size: 13px; }
+    .projects-composer { width: 100%; }
+    .projects-composer-row { gap: 10px; }
     .projects-form-actions { flex-wrap: wrap; }
     .projects-form-actions .projects-primary, .projects-form-actions .projects-secondary { flex: 1; }
 }

@@ -215,8 +215,10 @@ function CommentsPanel({ taskId, members, dirtyRef, onChanged }) {
         {!loading && comments.length === 0 && <p className="projects-empty">Belum ada komentar.</p>}
         <ul className="projects-comment-list">
             {comments.map(comment => <li key={comment.id} className="projects-comment">
-                <div className="projects-comment-author">{comment.author?.name ?? 'Pengguna'}</div>
-                <CommentBody body={comment.body} names={members.map(member => member.user?.name).filter(Boolean)} />
+                <div className="projects-comment-bubble">
+                    <div className="projects-comment-author">{comment.author?.name ?? 'Pengguna'}</div>
+                    <CommentBody body={comment.body} names={members.map(member => member.user?.name).filter(Boolean)} />
+                </div>
                 <div className="projects-comment-meta">
                     <time dateTime={comment.created_at}>{formatCommentStamp(comment.created_at)}</time>
                 </div>
@@ -225,16 +227,20 @@ function CommentsPanel({ taskId, members, dirtyRef, onChanged }) {
 
         <form className="projects-composer" onSubmit={send}>
             <div className="projects-composer-row">
-                <button type="button" className="projects-composer-add" aria-label="Sisipkan mention" aria-expanded={mentionQuery !== null || suggestions.length > 0} onClick={() => { setMentionQuery(''); inputRef.current?.focus(); }}>+</button>
+                <div className="projects-composer-input">
                 <textarea
                     ref={inputRef}
                     aria-label="Tulis komentar"
                     placeholder="Type here to make a comments..."
-                    rows={2}
+                    rows={1}
                     value={draft}
                     onChange={onDraftChange}
                 />
-                <button type="submit" className="projects-composer-send" aria-label="Kirim komentar" disabled={sending || !draft.trim()}>➤</button>
+                <button type="button" className="projects-composer-add" aria-label="Sisipkan mention" aria-expanded={mentionQuery !== null || suggestions.length > 0} onClick={() => { setMentionQuery(''); inputRef.current?.focus(); }}>+</button>
+                </div>
+                <button type="submit" className="projects-composer-send" aria-label="Kirim komentar" disabled={sending || !draft.trim()}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m21 3-6 18-4-8-8-4 18-6Z" /><path d="m11 13 10-10" /></svg>
+                </button>
             </div>
             {suggestions.length > 0 && <ul className="projects-mention-menu" role="listbox" aria-label="Saran mention">
                 {suggestions.map(member => <li key={member.user_id}>

@@ -232,9 +232,16 @@ it('renders comments in their own tab and sends @mentions of project members', a
 
     await screen.findByDisplayValue('Fiksasi Tim Google');
     fireEvent.click(screen.getByRole('tab', { name: 'Comments' }));
-    expect(await screen.findByText('Dokumennya kurang lengkap')).toBeInTheDocument();
+    const comment = await screen.findByText('Dokumennya kurang lengkap');
+    const bubble = comment.closest('.projects-comment-bubble');
+    expect(bubble).not.toBeNull();
+    expect(bubble.querySelector('time')).toBeNull();
+    expect(bubble.parentElement.querySelector('.projects-comment-meta time')).toBeInTheDocument();
 
     const composer = screen.getByRole('textbox', { name: 'Tulis komentar' });
+    expect(composer).toHaveAttribute('rows', '1');
+    expect(composer.parentElement).toContainElement(screen.getByRole('button', { name: 'Sisipkan mention' }));
+    expect(composer.parentElement).not.toContainElement(screen.getByRole('button', { name: 'Kirim komentar' }));
     fireEvent.change(composer, { target: { value: 'Halo @Ek' } });
     fireEvent.click(await screen.findByRole('option', { name: /Eka Prasetyo/ }));
     expect(composer).toHaveValue('Halo @Eka Prasetyo ');
