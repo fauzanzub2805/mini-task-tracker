@@ -55,7 +55,7 @@ class DemoDataSeeder extends Seeder
             ->all();
         $this->priorityIds = Priority::pluck('id', 'name')->all();
 
-        if (count($this->roleIds) !== 3 || count($this->priorityIds) !== 3) {
+        if (count($this->roleIds) !== 3 || count($this->priorityIds) !== count(PrioritySeeder::LEVELS)) {
             throw new RuntimeException(
                 'Role/priority belum ada. Jalankan RolesAndPermissionsSeeder dan PrioritySeeder dulu.'
             );
@@ -288,6 +288,9 @@ class DemoDataSeeder extends Seeder
                 'created_at' => $createdAt,
                 'updated_at' => $createdAt,
             ])->save();
+
+            // Pivot assignee tetap sinkron dengan assignee utama (idempotent).
+            $task->assignees()->sync($assignee !== null ? [$assignee->id] : []);
 
             $this->log($project, $task, $creator, 'task.created', "{$creator->name} membuat task \"{$task->title}\".", $createdAt);
 

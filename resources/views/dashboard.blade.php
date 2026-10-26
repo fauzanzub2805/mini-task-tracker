@@ -9,9 +9,10 @@
         $page = match (true) {
             request()->routeIs('profile.messages') => 'messages',
             request()->routeIs('profile') => 'profile',
+            request()->is('projects', 'projects/*') => 'projects',
             default => 'dashboard',
         };
-        $isAppPage = request()->routeIs('dashboard', 'profile', 'profile.messages');
+        $isAppPage = request()->routeIs('dashboard', 'profile', 'profile.messages') || $page === 'projects';
         $account = $isAppPage ? request()->user() : null;
         $dashboardOptions = [
             'page' => $page,
@@ -24,7 +25,8 @@
         $title = match ($page) {
             'messages' => 'Message',
             'profile' => 'Profile',
-            default => 'Dashboard Preview',
+            'projects' => 'Projects',
+            default => $account ? 'Dashboard' : 'Dashboard Preview',
         };
     @endphp
     <title>{{ $title }} · Rekayasa Task Tracker</title>

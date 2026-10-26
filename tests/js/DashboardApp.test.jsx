@@ -51,7 +51,7 @@ it('opens mobile navigation and closes it after section selection', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
     fireEvent.click(screen.getByRole('link', { name: 'AI Chatbot' }));
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.getByRole('button', { name: /Projects/ })).toBeDisabled();
+    expect(screen.getByRole('link', { name: /Projects/ })).toHaveAttribute('href', '/projects');
 });
 
 it('navigates from the sidebar to Profile and Message and back to Dashboard', () => {

@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\View\View;
 use Spatie\Permission\Models\Role;
 
 class ProjectController extends Controller
@@ -20,6 +21,11 @@ class ProjectController extends Controller
 
     public function index(Request $request)
     {
+        // Halaman HTML dan API berbagi URL; JSON tetap bawaan.
+        if ($this->wantsHtml($request)) {
+            return view('dashboard');
+        }
+
         $projects = Project::query()
             ->visibleTo($request->user())
             ->withCount(['members', 'tasks'])
@@ -58,9 +64,14 @@ class ProjectController extends Controller
         return (new ProjectResource($project->loadCount(['members', 'tasks'])))->response()->setStatusCode(201);
     }
 
-    public function show(Project $project): ProjectResource
+    public function show(Request $request, Project $project): ProjectResource|View
     {
         Gate::authorize('view', $project);
+
+        // Halaman detail project (UI) dilayani Blade hanya bila klien meminta HTML.
+        if ($this->wantsHtml($request)) {
+            return view('dashboard');
+        }
 
         return new ProjectResource($project->loadCount(['members', 'tasks']));
     }

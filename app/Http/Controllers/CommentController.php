@@ -21,7 +21,7 @@ class CommentController extends Controller
         Gate::authorize('view', $task);
 
         return CommentResource::collection(
-            $task->comments()->with('author')->orderBy('created_at')->orderBy('id')->paginate(25)
+            $task->comments()->with(['author', 'mentions'])->orderBy('created_at')->orderBy('id')->paginate(25)
         );
     }
 
@@ -36,11 +36,30 @@ class CommentController extends Controller
                 'body' => $request->body,
             ]);
 
+            // mention_ids bukan kolom komentar: disimpan di tabel comment_mentions.
+            $comment->mentions()->sync($this->mentionIds($request->input('mention_ids', [])));
+
             $this->activities->log($request->user(), $task->project_id, 'comment.created', 'menambahkan komentar', $task);
 
             return $comment;
         });
 
-        return (new CommentResource($comment->load('author')))->response()->setStatusCode(201);
+        return (new CommentResource($comment->load(['author', 'mentions'])))->response()->setStatusCode(201);
+    }
+
+    /**
+     * @param  mixed  $value
+     * @return array<int, int>
+     */
+    private function mentionIds($value): array
+    {
+        $rows = is_array($value) ? $value : [];
+
+        return collect($rows)
+            ->filter(fn ($id) => $id !== null && $id !== '')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
     }
 }

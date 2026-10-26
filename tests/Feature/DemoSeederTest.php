@@ -36,7 +36,7 @@ class DemoSeederTest extends TestCase
         $this->assertFalse(Role::findByName('staff', 'web')->hasPermissionTo('task.delete'));
 
         $this->assertSame(
-            ['low' => 1, 'medium' => 2, 'high' => 3],
+            ['low' => 1, 'medium' => 2, 'high' => 3, 'urgent' => 4],
             Priority::orderBy('level')->pluck('level', 'name')->all()
         );
 
@@ -161,7 +161,7 @@ class DemoSeederTest extends TestCase
         // Data referensi tetap ada, data demo tidak.
         $this->assertSame(3, Role::count());
         $this->assertSame(14, Permission::count());
-        $this->assertSame(3, Priority::count());
+        $this->assertSame(4, Priority::count());
         $this->assertSame(0, User::count());
         $this->assertSame(0, Project::count());
         $this->assertSame(0, Invitation::count());

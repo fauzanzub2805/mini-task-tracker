@@ -5,6 +5,9 @@ import { ProfilePage } from '../profile/ProfilePage.jsx';
 import { messagingApi } from '../../lib/messagingApi.js';
 import { initials } from '../../lib/format.js';
 import { LogoutControl } from './LogoutControl.jsx';
+import { ProjectMonitoring } from './ProjectMonitoring.jsx';
+import { ProjectsPage } from '../projects/ProjectsPage.jsx';
+import '../../../css/projects.css';
 
 const rows = [
     ['Fiksasi Tim Google', 'Google Vendor', 'Ardhito Pramono', 'You', 'In Progress'],
@@ -28,8 +31,8 @@ export function DashboardApp({ user = null, notifications = [], page = 'dashboar
     const initial = initials(name);
     const role = roleText(user);
     const isDashboard = page === 'dashboard';
-    const [expanded, setExpanded] = useState(true);
-    const [profileExpanded, setProfileExpanded] = useState(!isDashboard);
+    const [expanded, setExpanded] = useState(page !== 'projects');
+    const [profileExpanded, setProfileExpanded] = useState(page === 'profile' || page === 'messages');
     const [mobileOpen, setMobileOpen] = useState(false);
     const [active, setActive] = useState('ai-chatbot');
     const [chatUnread, setChatUnread] = useState(0);
@@ -84,7 +87,9 @@ export function DashboardApp({ user = null, notifications = [], page = 'dashboar
                     <a href={isDashboard ? '#ai-chatbot' : '/dashboard#ai-chatbot'} aria-current={isDashboard && active === 'ai-chatbot' ? 'location' : undefined} onClick={() => navigate('ai-chatbot')}>AI Chatbot</a>
                     <a href={isDashboard ? '#progress-table' : '/dashboard#progress-table'} aria-current={isDashboard && active === 'progress-table' ? 'location' : undefined} onClick={() => navigate('progress-table')}>Progress Table</a>
                 </div>}
-                {['Projects', 'Calendar'].map((label, i) => <button key={label} className="dashboard-nav-item" disabled title={`${label} belum tersedia`}><span aria-hidden="true">{['☷', '▦'][i]}</span>{label}<span className="dashboard-chevron">›</span></button>)}
+                <a className="dashboard-nav-item" href="/projects" aria-current={page === 'projects' ? 'page' : undefined}><span aria-hidden="true">☷</span>Projects<span className="dashboard-chevron">{page === 'projects' ? '⌃' : '›'}</span></a>
+                {page === 'projects' && <div className="dashboard-subnav"><a className="dashboard-subnav-pill" href="/projects">Projects</a><a href="/projects?view=tasks">Tasks</a><a href="/projects?view=teams">Teams</a></div>}
+                <button className="dashboard-nav-item" disabled title="Calendar belum tersedia"><span aria-hidden="true">▦</span>Calendar<span className="dashboard-chevron">›</span></button>
 
                 <button className="dashboard-nav-item" aria-expanded={profileExpanded} aria-controls="profile-sections" onClick={() => setProfileExpanded(!profileExpanded)}><span aria-hidden="true">♙</span> Profile <span className="dashboard-chevron">{profileExpanded ? '⌃' : '⌄'}</span></button>
                 {profileExpanded && <div id="profile-sections" className="dashboard-subnav">
@@ -105,12 +110,13 @@ export function DashboardApp({ user = null, notifications = [], page = 'dashboar
             <main className="dashboard-content">
                 {page === 'messages' && <MessagePage user={user} onUnreadChange={setChatUnread} />}
                 {page === 'profile' && <ProfilePage user={user} />}
+                {page === 'projects' && <ProjectsPage user={user} />}
                 {page === 'dashboard' && <>
-                    <div className="dashboard-demo" role="note">{user ? 'Tabel menggunakan data contoh. AI Chatbot belum aktif.' : 'Preview dashboard — identitas dan tabel menggunakan data contoh. AI Chatbot belum aktif.'}</div>
+                    <div className="dashboard-demo" role="note">{user ? 'Monitoring terhubung dengan data project. AI Chatbot belum aktif.' : 'Preview dashboard — identitas dan tabel menggunakan data contoh. AI Chatbot belum aktif.'}</div>
                     <section id="ai-chatbot" className="dashboard-welcome" aria-labelledby="welcome-title"><h1 id="welcome-title">Welcome, {name.split(/\s+/)[0]}!</h1><p>Ask AI to see everything due today across all your projects here.</p><div className="dashboard-search"><div><input aria-label="AI Chatbot (belum tersedia)" placeholder="Type here to search task or make a new project & task..." disabled /><button disabled aria-label="Tambah lampiran belum tersedia">+</button></div><button disabled aria-label="Kirim ke AI belum tersedia">➤</button></div><img src="/images/login-illustration.png" alt="" className="dashboard-illustration" /></section>
-                    <section id="progress-table" className="dashboard-progress" aria-labelledby="progress-title"><h2 className="sr-only" id="progress-title">Progress Table</h2><div className="dashboard-stats">{statuses.map(status => <div key={status} className={`dashboard-stat ${statusClass(status)}`}><span>{status}</span><strong>{rows.filter(row => row[4] === status).length}</strong></div>)}</div>
+                    {user?.id ? <ProjectMonitoring userId={user.id} /> : <section id="progress-table" className="dashboard-progress" aria-labelledby="progress-title"><h2 className="sr-only" id="progress-title">Progress Table</h2><div className="dashboard-stats">{statuses.map(status => <div key={status} className={`dashboard-stat ${statusClass(status)}`}><span>{status}</span><strong>{rows.filter(row => row[4] === status).length}</strong></div>)}</div>
                         <div className="dashboard-table-card"><h3>On going Projects &amp; Tasks</h3><p className="dashboard-table-note">Data contoh — ringkasan dihitung dari lima task di bawah.</p><div className="dashboard-table-scroll" tabIndex={0} role="region" aria-label="Tabel progress, geser horizontal pada layar kecil"><table><caption className="sr-only">Daftar contoh project dan task yang sedang berjalan</caption><thead><tr>{['Task', 'Project', 'Assignee', 'PM', 'Status'].map(label => <th key={label} scope="col">{label}</th>)}</tr></thead><tbody>{rows.map((row, i) => <tr key={row[0]}>{row.map((value, j) => <td key={j}>{j === 4 ? <span className={`dashboard-badge ${statusClass(value)}`}>{value}</span> : j === 0 ? <div className="dashboard-task"><span className={`task-dot task-dot-${i}`} aria-hidden="true">{i === 0 ? 'G' : ''}</span>{value}</div> : value}</td>)}</tr>)}</tbody></table></div></div>
-                    </section>
+                    </section>}
                 </>}
             </main>
         </div>

@@ -24,7 +24,7 @@ class ListTasksRequest extends FormRequest
     {
         return [
             'q' => ['nullable', 'string', 'max:100'],
-            'status' => ['nullable', Rule::in([Task::STATUS_TODO, Task::STATUS_IN_PROGRESS, Task::STATUS_DONE])],
+            'status' => ['nullable', Rule::in(Task::STATUSES)],
             'priority_id' => ['nullable', 'integer'],
             'assignee_id' => ['nullable', 'integer'],
             'sort' => ['nullable', Rule::in(['priority', 'due_date', 'created_at'])],

@@ -6,8 +6,8 @@ use App\Models\Priority;
 use Illuminate\Database\Seeder;
 
 /**
- * Tabel master priorities: low 1, medium 2, high 3 (level dipakai untuk sort).
- * Idempotent.
+ * Tabel master priorities: low 1, medium 2, high 3, urgent 4 (level dipakai
+ * untuk sort). Urgent ditambahkan mengikuti desain UI terbaru. Idempotent.
  */
 class PrioritySeeder extends Seeder
 {
@@ -15,6 +15,7 @@ class PrioritySeeder extends Seeder
         'low' => 1,
         'medium' => 2,
         'high' => 3,
+        'urgent' => 4,
     ];
 
     public function run(): void
