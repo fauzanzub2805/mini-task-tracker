@@ -10,6 +10,8 @@
 /.idea
 /.nova
 /.phpunit.cache
+# Local agent run artifacts, transcripts, and session metadata
+/.pi-workflow/
 /.vscode
 /.zed
 /auth.json
