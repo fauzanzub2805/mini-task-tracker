@@ -29,7 +29,11 @@ function useRoute(initialPath) {
         if (initialPath !== undefined) return undefined;
         const onPop = () => setLocation(readPath());
         window.addEventListener('popstate', onPop);
-        return () => window.removeEventListener('popstate', onPop);
+        window.addEventListener('app:navigate', onPop);
+        return () => {
+            window.removeEventListener('popstate', onPop);
+            window.removeEventListener('app:navigate', onPop);
+        };
     }, [initialPath]);
 
     const navigate = useCallback(to => {
@@ -320,6 +324,11 @@ export function ProjectsPage({ user = null, path }) {
 
         const controller = new AbortController();
         let pending = false;
+        dirtyRef.current = false;
+        setProject(null);
+        setTasks([]);
+        setMembers([]);
+        setActivities([]);
         setLoadingProject(true);
 
         async function load() {
@@ -433,6 +442,7 @@ export function ProjectsPage({ user = null, path }) {
         />}
         {projectId && project && taskId && <>
             <TaskDetail
+                key={taskId}
                 taskId={taskId}
                 project={project}
                 members={members}

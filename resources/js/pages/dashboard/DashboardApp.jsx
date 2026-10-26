@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useAppNavigation } from '../../lib/useAppNavigation.js';
 import { HeaderInbox } from './HeaderInbox.jsx';
 import { MessagePage } from '../profile/MessagePage.jsx';
 import { ProfilePage } from '../profile/ProfilePage.jsx';
@@ -26,7 +27,8 @@ function roleText(user) {
     return roles.length ? roles.join(', ') : 'Belum ada peran';
 }
 
-export function DashboardApp({ user = null, notifications = [], page = 'dashboard' }) {
+export function DashboardApp({ user = null, notifications = [], page: initialPage = 'dashboard' }) {
+    const page = useAppNavigation(initialPage);
     const name = user ? (user.name?.trim() || 'Pengguna') : 'Fulan bin Fulan';
     const initial = initials(name);
     const role = roleText(user);
@@ -52,13 +54,21 @@ export function DashboardApp({ user = null, notifications = [], page = 'dashboar
         window.addEventListener('popstate', sync);
         window.addEventListener('hashchange', sync);
         window.addEventListener('projects:navigate', sync);
+        window.addEventListener('app:navigate', sync);
         return () => {
             window.removeEventListener('popstate', sync);
             window.removeEventListener('hashchange', sync);
             window.removeEventListener('projects:navigate', sync);
+            window.removeEventListener('app:navigate', sync);
         };
     }, [page]);
     const [chatUnread, setChatUnread] = useState(0);
+
+    useEffect(() => {
+        setExpanded(page !== 'projects');
+        setProfileExpanded(page === 'profile' || page === 'messages');
+        setMobileOpen(false);
+    }, [page]);
 
     // Badge chat pada header memakai hitungan nyata. Halaman Message memegang
     // polling-nya sendiri agar tidak ada dua permintaan paralel.
