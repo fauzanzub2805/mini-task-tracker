@@ -235,6 +235,8 @@ it('renders comments in their own tab and sends @mentions of project members', a
     const comment = await screen.findByText('Dokumennya kurang lengkap');
     const bubble = comment.closest('.projects-comment-bubble');
     expect(bubble).not.toBeNull();
+    expect(bubble.closest('.projects-comment').querySelector('.projects-comment-avatar')).toHaveAttribute('role', 'img');
+    expect(bubble.closest('.projects-comment').querySelector('.projects-comment-avatar')).not.toBeEmptyDOMElement();
     expect(bubble.querySelector('time')).toBeNull();
     expect(bubble.parentElement.querySelector('.projects-comment-meta time')).toBeInTheDocument();
 

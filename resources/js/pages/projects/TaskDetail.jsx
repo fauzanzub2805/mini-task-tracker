@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarPicker } from './CalendarPicker.jsx';
+import { initials } from '../../lib/format.js';
 import { ActivityTab, ProjectTabs, SettingsTab } from './ProjectDetail.jsx';
 import {
     formatCommentStamp,
@@ -16,6 +17,17 @@ import {
 } from './projectsApi.js';
 
 const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function CommentAvatar({ author }) {
+    const [failedUrl, setFailedUrl] = useState(null);
+    const name = author?.name || 'Pengguna';
+    const url = author?.avatar_url || author?.profile_photo_url;
+    return <span className="projects-comment-avatar" role="img" aria-label={`Foto profil ${name}`}>
+        {url && failedUrl !== url
+            ? <img src={url} alt="" loading="lazy" onError={() => setFailedUrl(url)} />
+            : <span aria-hidden="true">{initials(name)}</span>}
+    </span>;
+}
 
 function CommentBody({ body, names }) {
     const pattern = useMemo(() => {
@@ -215,12 +227,15 @@ function CommentsPanel({ taskId, members, dirtyRef, onChanged }) {
         {!loading && comments.length === 0 && <p className="projects-empty">Belum ada komentar.</p>}
         <ul className="projects-comment-list">
             {comments.map(comment => <li key={comment.id} className="projects-comment">
+                <CommentAvatar author={comment.author} />
+                <div className="projects-comment-content">
                 <div className="projects-comment-bubble">
                     <div className="projects-comment-author">{comment.author?.name ?? 'Pengguna'}</div>
                     <CommentBody body={comment.body} names={members.map(member => member.user?.name).filter(Boolean)} />
                 </div>
                 <div className="projects-comment-meta">
                     <time dateTime={comment.created_at}>{formatCommentStamp(comment.created_at)}</time>
+                </div>
                 </div>
             </li>)}
         </ul>
