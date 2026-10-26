@@ -34,7 +34,30 @@ export function DashboardApp({ user = null, notifications = [], page = 'dashboar
     const [expanded, setExpanded] = useState(page !== 'projects');
     const [profileExpanded, setProfileExpanded] = useState(page === 'profile' || page === 'messages');
     const [mobileOpen, setMobileOpen] = useState(false);
-    const [active, setActive] = useState('ai-chatbot');
+    const [active, setActive] = useState(() => window.location.hash === '#progress-table' ? 'progress-table' : 'ai-chatbot');
+    const projectSection = () => {
+        const view = new URLSearchParams(window.location.search).get('view');
+        if (view === 'teams') return 'teams';
+        if (view === 'tasks' || /\/projects\/\d+\/tasks\/\d+/.test(window.location.pathname)) return 'tasks';
+        return 'projects';
+    };
+    const [activeProject, setActiveProject] = useState(projectSection);
+
+    useEffect(() => {
+        const sync = () => {
+            setActive(window.location.hash === '#progress-table' ? 'progress-table' : 'ai-chatbot');
+            setActiveProject(projectSection());
+        };
+        sync();
+        window.addEventListener('popstate', sync);
+        window.addEventListener('hashchange', sync);
+        window.addEventListener('projects:navigate', sync);
+        return () => {
+            window.removeEventListener('popstate', sync);
+            window.removeEventListener('hashchange', sync);
+            window.removeEventListener('projects:navigate', sync);
+        };
+    }, [page]);
     const [chatUnread, setChatUnread] = useState(0);
 
     // Badge chat pada header memakai hitungan nyata. Halaman Message memegang
@@ -88,7 +111,13 @@ export function DashboardApp({ user = null, notifications = [], page = 'dashboar
                     <a href={isDashboard ? '#progress-table' : '/dashboard#progress-table'} aria-current={isDashboard && active === 'progress-table' ? 'location' : undefined} onClick={() => navigate('progress-table')}>Progress Table</a>
                 </div>}
                 <a className="dashboard-nav-item" href="/projects" aria-current={page === 'projects' ? 'page' : undefined}><span aria-hidden="true">☷</span>Projects<span className="dashboard-chevron">{page === 'projects' ? '⌃' : '›'}</span></a>
-                {page === 'projects' && <div className="dashboard-subnav"><a className="dashboard-subnav-pill" href="/projects">Projects</a><a href="/projects?view=tasks">Tasks</a><a href="/projects?view=teams">Teams</a></div>}
+                {page === 'projects' && <div id="project-sections" className="dashboard-subnav">
+                    {['projects', 'tasks', 'teams'].map(section => <a key={section}
+                        href={section === 'projects' ? '/projects' : `/projects?view=${section}`}
+                        aria-current={activeProject === section ? 'page' : undefined}
+                        onClick={closeMobile}
+                    >{section[0].toUpperCase() + section.slice(1)}</a>)}
+                </div>}
                 <button className="dashboard-nav-item" disabled title="Calendar belum tersedia"><span aria-hidden="true">▦</span>Calendar<span className="dashboard-chevron">›</span></button>
 
                 <button className="dashboard-nav-item" aria-expanded={profileExpanded} aria-controls="profile-sections" onClick={() => setProfileExpanded(!profileExpanded)}><span aria-hidden="true">♙</span> Profile <span className="dashboard-chevron">{profileExpanded ? '⌃' : '⌄'}</span></button>

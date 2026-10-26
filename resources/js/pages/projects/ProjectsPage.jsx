@@ -35,6 +35,7 @@ function useRoute(initialPath) {
     const navigate = useCallback(to => {
         if (typeof window !== 'undefined' && window.history?.pushState) {
             window.history.pushState({}, '', to);
+            window.dispatchEvent(new Event('projects:navigate'));
         }
         setLocation(to);
     }, []);

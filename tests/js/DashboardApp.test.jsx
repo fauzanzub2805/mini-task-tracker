@@ -3,10 +3,37 @@ import '@testing-library/jest-dom/vitest';
 import { afterEach, expect, it, vi } from 'vitest';
 import { DashboardApp } from '../../resources/js/pages/dashboard/DashboardApp.jsx';
 
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); window.history.replaceState({}, '', '/'); });
 
 const user = { id: 1, name: 'Dewi Lestari', roles: ['staff'] };
 const json = data => Promise.resolve({ ok: true, status: 200, json: async () => data });
+
+it('tracks the active project submenu across query, detail and history navigation', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => json({ data: [] })));
+    window.history.replaceState({}, '', '/projects?view=teams');
+    render(<DashboardApp page="projects" />);
+    const menu = within(document.getElementById('project-sections'));
+    expect(menu.getByRole('link', { name: 'Teams' })).toHaveAttribute('aria-current', 'page');
+    expect(menu.getByRole('link', { name: 'Projects' })).not.toHaveAttribute('aria-current');
+    window.history.pushState({}, '', '/projects/1/tasks/2');
+    fireEvent(window, new Event('projects:navigate'));
+    expect(menu.getByRole('link', { name: 'Tasks' })).toHaveAttribute('aria-current', 'page');
+    expect(menu.getByRole('link', { name: 'Teams' })).not.toHaveAttribute('aria-current');
+    window.history.replaceState({}, '', '/projects');
+    fireEvent.popState(window);
+    expect(menu.getByRole('link', { name: 'Projects' })).toHaveAttribute('aria-current', 'page');
+    await waitFor(() => expect(screen.queryByText('Memuat project…')).not.toBeInTheDocument());
+});
+
+it('initializes and updates Dashboard highlight from the URL hash', () => {
+    window.history.replaceState({}, '', '/dashboard#progress-table');
+    render(<DashboardApp />);
+    expect(screen.getByRole('link', { name: 'Progress Table' })).toHaveAttribute('aria-current', 'location');
+    window.history.replaceState({}, '', '/dashboard#ai-chatbot');
+    fireEvent(window, new Event('hashchange'));
+    expect(screen.getByRole('link', { name: 'AI Chatbot' })).toHaveAttribute('aria-current', 'location');
+    expect(screen.getByRole('link', { name: 'Progress Table' })).not.toHaveAttribute('aria-current');
+});
 
 it('renders idle dashboard with clearly labeled demo data and disabled AI', () => {
     const fetch = vi.fn(); vi.stubGlobal('fetch', fetch);
