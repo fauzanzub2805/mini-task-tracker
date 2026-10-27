@@ -62,6 +62,20 @@ it('links both submenus to sections on the same page and supports collapse', () 
     expect(screen.getByRole('link', { name: 'Progress Table' })).toBeInTheDocument();
 });
 
+it('uses bold sidebar chevrons pointing down only when the submenu is open', () => {
+    render(<DashboardApp />);
+    for (const name of ['Dashboard', 'Profile']) {
+        const toggle = screen.getByRole('button', { name });
+        const icon = toggle.querySelector('svg.dashboard-chevron');
+        expect(icon).toHaveAttribute('stroke-width', '3');
+        expect(icon).toHaveAttribute('aria-hidden', 'true');
+        const wasOpen = toggle.getAttribute('aria-expanded') === 'true';
+        expect(icon.classList.contains('is-open')).toBe(wasOpen);
+        fireEvent.click(toggle);
+        expect(icon.classList.contains('is-open')).toBe(!wasOpen);
+    }
+});
+
 it('uses authenticated name, role and initial instead of demo identity', () => {
     render(<DashboardApp user={{ name: 'Dewi Lestari', roles: ['staff'] }} />);
     expect(screen.getByText('Dewi Lestari')).toBeInTheDocument();
@@ -90,6 +104,7 @@ it('navigates from the sidebar to Profile and Message and back to Dashboard', ()
     expect(profile).toHaveAttribute('href', '/profile');
     expect(profile).toHaveAttribute('aria-current', 'page');
     expect(message).toHaveAttribute('href', '/profile/messages');
+    expect(message).not.toHaveClass('dashboard-subnav-pill');
     expect(screen.getByRole('link', { name: 'AI Chatbot' })).toHaveAttribute('href', '/dashboard#ai-chatbot');
     expect(screen.getByRole('link', { name: /Rekayasa/ })).toHaveAttribute('href', '/dashboard');
     expect(screen.getByRole('heading', { name: 'Profile', level: 1 })).toBeInTheDocument();

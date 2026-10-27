@@ -226,6 +226,30 @@ it('uses a functional calendar and saves the edited task', async () => {
     window.removeEventListener('projects:changed', changed);
 });
 
+it('uses bold chevrons tied to the Priority and Status dropdown state', async () => {
+    setup();
+    render(<ProjectsPage user={manager} path="/projects/1/tasks/11" />);
+    await screen.findByDisplayValue('Fiksasi Tim Google');
+
+    for (const [label, listbox, option] of [['High', 'Priority', 'Medium'], ['In Progress', 'Status', 'Testing']]) {
+        const trigger = screen.getByRole('button', { name: label });
+        const icon = trigger.querySelector('svg.projects-dropdown-chevron');
+        expect(icon).toHaveAttribute('width', '22');
+        expect(icon).toHaveAttribute('stroke-width', '3');
+        expect(icon).toHaveAttribute('aria-hidden', 'true');
+        expect(trigger).toHaveAttribute('aria-expanded', 'false');
+        fireEvent.click(trigger);
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(screen.getByRole('listbox', { name: listbox })).toBeInTheDocument();
+        fireEvent.click(trigger);
+        expect(trigger).toHaveAttribute('aria-expanded', 'false');
+        fireEvent.click(trigger);
+        fireEvent.click(screen.getByRole('option', { name: option }));
+        expect(trigger).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.queryByRole('listbox', { name: listbox })).not.toBeInTheDocument();
+    }
+});
+
 it('rejects files above 10 MB and uploads multiple accepted files', async () => {
     const { state } = setup();
     render(<ProjectsPage user={manager} path="/projects/1/tasks/11" />);
@@ -243,6 +267,24 @@ it('rejects files above 10 MB and uploads multiple accepted files', async () => 
 
     fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
     await waitFor(() => expect(state.uploadedFiles).toEqual(['satu.png', 'dua.pdf']));
+});
+
+it('uses the same bold stateful chevron on the Assignee button', async () => {
+    setup();
+    render(<ProjectsPage user={manager} path="/projects/1/tasks/11" />);
+    await screen.findByDisplayValue('Fiksasi Tim Google');
+    const trigger = screen.getByRole('button', { name: /Dewi Anggraini/ });
+    const icon = trigger.querySelector('svg.projects-dropdown-chevron');
+    expect(icon).toHaveAttribute('width', '22');
+    expect(icon).toHaveAttribute('stroke-width', '3');
+    expect(icon).toHaveAttribute('aria-hidden', 'true');
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('dialog', { name: 'Choose Assignee' })).toBeInTheDocument();
+    fireEvent.click(trigger);
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('dialog', { name: 'Choose Assignee' })).not.toBeInTheDocument();
 });
 
 it('only lets a project manager add assignees', async () => {

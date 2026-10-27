@@ -6,12 +6,12 @@ html:has(.dashboard-shell) { scroll-behavior: smooth; scroll-padding-top: 100px;
 .dashboard-brand strong { font-size: 24px; line-height: 1.2; }
 .dashboard-brand small { display: block; font-size: 14px; }
 .dashboard-nav-item { display: flex; width: 100%; align-items: center; gap: 10px; background: #f13d31; border-radius: 3px; padding: 9px 12px; margin-bottom: 9px; text-align: left; }
-.dashboard-chevron { margin-left: auto; }
+.dashboard-chevron { display: block; margin-left: auto; flex: 0 0 22px; width: 22px; height: 22px; transform: rotate(0deg); transform-origin: center; }
+.dashboard-chevron.is-open { transform: rotate(90deg); }
 .dashboard-subnav { display: grid; gap: 5px; margin: 5px 0 16px; }
 .dashboard-subnav a { padding: 6px 12px; border-radius: 4px; }
 .dashboard-subnav a:hover { background: #ffffff18; }
-#dashboard-sections a, #project-sections a { width: fit-content; padding: 3px 8px; border-radius: 999px; }
-#dashboard-sections [aria-current], #project-sections [aria-current] { background: #e88400; color: #fff; }
+#dashboard-sections [aria-current], #project-sections [aria-current], #profile-sections [aria-current] { background: #e88400; color: #fff; }
 .dashboard-nav-note { font-size: 12px; opacity: .8; margin: 20px 10px; }
 .dashboard-shell button:disabled { cursor: not-allowed; }
 .dashboard-shell button:not(:disabled) { cursor: pointer; }
@@ -91,7 +91,6 @@ html:has(.dashboard-shell) { scroll-behavior: smooth; scroll-padding-top: 100px;
 .dashboard-profile-theme .dashboard-unread-dot { background: #ef4035; border-color: #fff; }
 .dashboard-unread-count { position: absolute; top: -2px; right: -2px; min-width: 19px; height: 19px; padding: 0 4px; display: grid; place-items: center; border-radius: 999px; background: #f13d31; color: #fff; border: 2px solid #f13d31; font-size: 10px; font-weight: 700; line-height: 1; }
 .dashboard-profile-theme .dashboard-unread-count { background: #fff; color: #d31e2f; border-color: #f13d31; }
-.dashboard-subnav-pill { background: #ffd85c !important; color: #7a1120 !important; width: fit-content; padding: 5px 16px !important; border-radius: 6px; font-weight: 600; }
 .dashboard-profile-theme .dashboard-sidebar { background: #ac1025; }
 
 .message-page { padding-top: 18px; }

@@ -21,6 +21,10 @@ const statuses = ['Open Task', 'In Progress', 'Finish Dev', 'Testing', 'Finished
 const statusClass = status => status.toLowerCase().replaceAll(' ', '-');
 const roleLabels = { admin: 'Admin', manager: 'Manager', staff: 'Staff' };
 
+function SidebarChevron({ open = false }) {
+    return <svg className={`dashboard-chevron${open ? ' is-open' : ''}`} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7" /></svg>;
+}
+
 function roleText(user) {
     if (!user) return 'Project Manager · Demo';
     const roles = (user.roles ?? []).map(value => roleLabels[value] ?? value).filter(Boolean);
@@ -115,12 +119,12 @@ export function DashboardApp({ user = null, notifications = [], page: initialPag
         <aside className={`dashboard-sidebar ${mobileOpen ? 'is-open' : ''}`} id="dashboard-sidebar" aria-label="Navigasi utama">
             <a className="dashboard-brand" href="/dashboard" onClick={closeMobile}><span aria-hidden="true">▥</span><div><strong>Rekayasa</strong><small>Task Tracker</small></div></a>
             <nav>
-                <button className="dashboard-nav-item" aria-expanded={expanded} aria-controls="dashboard-sections" onClick={() => setExpanded(!expanded)}><span aria-hidden="true">▦</span> Dashboard <span className="dashboard-chevron">{expanded ? '⌃' : '⌄'}</span></button>
+                <button className="dashboard-nav-item" aria-expanded={expanded} aria-controls="dashboard-sections" onClick={() => setExpanded(!expanded)}><span aria-hidden="true">▦</span> Dashboard <SidebarChevron open={expanded} /></button>
                 {expanded && <div id="dashboard-sections" className="dashboard-subnav">
                     <a href={isDashboard ? '#ai-chatbot' : '/dashboard#ai-chatbot'} aria-current={isDashboard && active === 'ai-chatbot' ? 'location' : undefined} onClick={() => navigate('ai-chatbot')}>AI Chatbot</a>
                     <a href={isDashboard ? '#progress-table' : '/dashboard#progress-table'} aria-current={isDashboard && active === 'progress-table' ? 'location' : undefined} onClick={() => navigate('progress-table')}>Progress Table</a>
                 </div>}
-                <a className="dashboard-nav-item" href="/projects" aria-current={page === 'projects' ? 'page' : undefined}><span aria-hidden="true">☷</span>Projects<span className="dashboard-chevron">{page === 'projects' ? '⌃' : '›'}</span></a>
+                <a className="dashboard-nav-item" href="/projects" aria-current={page === 'projects' ? 'page' : undefined}><span aria-hidden="true">☷</span>Projects<SidebarChevron open={page === 'projects'} /></a>
                 {page === 'projects' && <div id="project-sections" className="dashboard-subnav">
                     {['projects', 'tasks', 'teams'].map(section => <a key={section}
                         href={section === 'projects' ? '/projects' : `/projects?view=${section}`}
@@ -128,15 +132,15 @@ export function DashboardApp({ user = null, notifications = [], page: initialPag
                         onClick={closeMobile}
                     >{section[0].toUpperCase() + section.slice(1)}</a>)}
                 </div>}
-                <button className="dashboard-nav-item" disabled title="Calendar belum tersedia"><span aria-hidden="true">▦</span>Calendar<span className="dashboard-chevron">›</span></button>
+                <button className="dashboard-nav-item" disabled title="Calendar belum tersedia"><span aria-hidden="true">▦</span>Calendar<SidebarChevron /></button>
 
-                <button className="dashboard-nav-item" aria-expanded={profileExpanded} aria-controls="profile-sections" onClick={() => setProfileExpanded(!profileExpanded)}><span aria-hidden="true">♙</span> Profile <span className="dashboard-chevron">{profileExpanded ? '⌃' : '⌄'}</span></button>
+                <button className="dashboard-nav-item" aria-expanded={profileExpanded} aria-controls="profile-sections" onClick={() => setProfileExpanded(!profileExpanded)}><span aria-hidden="true">♙</span> Profile <SidebarChevron open={profileExpanded} /></button>
                 {profileExpanded && <div id="profile-sections" className="dashboard-subnav">
                     <a href="/profile" aria-current={page === 'profile' ? 'page' : undefined}>Profile</a>
-                    <a href="/profile/messages" className={page === 'messages' ? 'dashboard-subnav-pill' : undefined} aria-current={page === 'messages' ? 'page' : undefined}>Message</a>
+                    <a href="/profile/messages" aria-current={page === 'messages' ? 'page' : undefined}>Message</a>
                 </div>}
 
-                <button className="dashboard-nav-item" disabled title="Settings belum tersedia"><span aria-hidden="true">⚙</span>Settings<span className="dashboard-chevron">›</span></button>
+                <button className="dashboard-nav-item" disabled title="Settings belum tersedia"><span aria-hidden="true">⚙</span>Settings<SidebarChevron /></button>
                 <LogoutControl enabled={Boolean(user)} />
             </nav>
         </aside>

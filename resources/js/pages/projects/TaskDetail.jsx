@@ -82,13 +82,19 @@ function revokePreview(item) {
     if (item?.preview && typeof URL.revokeObjectURL === 'function') URL.revokeObjectURL(item.preview);
 }
 
+function DropdownChevron() {
+    return <svg className="projects-dropdown-chevron" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+        <path d="m9 5 7 7-7 7" />
+    </svg>;
+}
+
 function PrioritySelect({ value, options, onChange }) {
     const [open, setOpen] = useState(false);
     const current = options.find(option => String(option.id) === String(value));
 
     return <div className="projects-select">
         <button type="button" className={`projects-pill priority-${priorityKey(current)}`} aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen(!open)}>
-            {priorityLabel(current)} <span aria-hidden="true">⌄</span>
+            {priorityLabel(current)} <DropdownChevron />
         </button>
         {open && <ul className="projects-menu" role="listbox" aria-label="Priority">
             {options.map(option => <li key={option.name}>
@@ -111,7 +117,7 @@ function StatusSelect({ value, onChange }) {
 
     return <div className="projects-select">
         <button type="button" className={`projects-status-badge status-${statusClass(value)}`} aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen(!open)}>
-            {statusLabel(value)} <span aria-hidden="true">›</span>
+            {statusLabel(value)} <DropdownChevron />
         </button>
         {open && <ul className="projects-menu" role="listbox" aria-label="Status">
             {STATUS_OPTIONS.map(option => <li key={option.value}>
@@ -138,7 +144,7 @@ function AssigneePicker({ ids, members, canManage, onChange }) {
 
     return <div className="projects-select projects-assignee">
         <button type="button" className="projects-pill projects-assignee-pill" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(!open)}>
-            {short} <span aria-hidden="true">⌃</span>
+            {short} <DropdownChevron />
         </button>
         {open && <div className="projects-assignee-menu" role="dialog" aria-label="Choose Assignee">
             <ul>
