@@ -591,10 +591,10 @@ export function TaskDetail({ taskId, project, members, activities, priorities, u
 
     const creator = task?.creator?.name ?? members.find(member => member.user_id === task?.created_by_id)?.user?.name ?? '—';
     const tabs = [
-        { id: 'project-info', label: 'Project Info' },
+        { id: 'project-info', label: 'Task Info' },
         { id: 'comments', label: 'Comments' },
-        { id: 'project-activity', label: 'Project Activity' },
-        { id: 'project-setting', label: 'Project Setting' },
+        { id: 'project-activity', label: 'Task Activity' },
+        { id: 'project-setting', label: 'Task Setting' },
     ];
 
     return <>

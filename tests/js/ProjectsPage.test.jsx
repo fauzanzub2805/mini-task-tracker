@@ -402,12 +402,29 @@ it('does not offer comment deletion', async () => {
     expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
 });
 
+it('uses task labels for detail tabs and preserves Comments', async () => {
+    setup();
+    render(<ProjectsPage user={manager} path="/projects/1/tasks/11" />);
+
+    await screen.findByDisplayValue('Fiksasi Tim Google');
+    expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual([
+        'Task Info', 'Comments', 'Task Activity', 'Task Setting',
+    ]);
+    expect(screen.getByRole('tab', { name: 'Task Info' })).toHaveAttribute('aria-selected', 'true');
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Task Setting' }));
+    expect(await screen.findByLabelText('Project Name')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Task Info' }));
+    expect(await screen.findByDisplayValue('Fiksasi Tim Google')).toBeInTheDocument();
+});
+
 it('shows only task-specific activity on the task activity tab', async () => {
     setup();
     render(<ProjectsPage user={manager} path="/projects/1/tasks/11" />);
 
     await screen.findByDisplayValue('Fiksasi Tim Google');
-    fireEvent.click(screen.getByRole('tab', { name: 'Project Activity' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Task Activity' }));
 
     expect(await screen.findByText(/memperbarui task/)).toBeInTheDocument();
     expect(screen.queryByText(/membuat project/)).toBeNull();
