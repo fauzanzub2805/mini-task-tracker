@@ -16,6 +16,8 @@ class UpdateProjectRequest extends FormRequest
         return [
             'name' => ['sometimes', 'required', 'string', 'max:200'],
             'description' => ['sometimes', 'nullable', 'string'],
+            'image' => ['sometimes', 'required', 'image', 'mimes:jpg,jpeg,png', 'mimetypes:image/jpeg,image/png', 'max:5120', 'prohibited_if:remove_image,1,true'],
+            'remove_image' => ['sometimes', 'boolean'],
         ];
     }
 }

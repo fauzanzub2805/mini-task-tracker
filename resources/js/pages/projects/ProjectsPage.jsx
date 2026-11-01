@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, ProjectDetail } from './ProjectDetail.jsx';
 import { TaskDetail } from './TaskDetail.jsx';
+import { ProjectImageField } from './ProjectImageField.jsx';
 import {
     notifyProjectsChanged,
     priorityLabel,
@@ -137,6 +138,7 @@ function ProjectCards({ projects, navigate }) {
 function CreateProjectForm({ onClose, onCreated }) {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [image, setImage] = useState(null);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
 
@@ -145,7 +147,7 @@ function CreateProjectForm({ onClose, onCreated }) {
         if (!name.trim()) { setError('Nama project wajib diisi.'); return; }
         setBusy(true); setError('');
         try {
-            const created = await projectsApi.create({ name: name.trim(), description });
+            const created = await projectsApi.create({ name: name.trim(), description, ...(image ? { image } : {}) });
             const project = created?.data ?? created;
             notifyProjectsChanged();
             onCreated(project);
@@ -158,12 +160,13 @@ function CreateProjectForm({ onClose, onCreated }) {
     return <form className="projects-form" onSubmit={submit} aria-label="Create New Project">
         <div className="projects-field">
             <label className="projects-field-label" htmlFor="projects-new-name">Project Name</label>
-            <div className="projects-field-body"><input id="projects-new-name" value={name} maxLength={200} required onChange={event => setName(event.target.value)} /></div>
+            <div className="projects-field-body"><input id="projects-new-name" disabled={busy} value={name} maxLength={200} required onChange={event => setName(event.target.value)} /></div>
         </div>
         <div className="projects-field">
             <label className="projects-field-label" htmlFor="projects-new-description">Description</label>
-            <div className="projects-field-body"><textarea id="projects-new-description" rows={4} value={description} onChange={event => setDescription(event.target.value)} /></div>
+            <div className="projects-field-body"><textarea id="projects-new-description" disabled={busy} rows={4} value={description} onChange={event => setDescription(event.target.value)} /></div>
         </div>
+        <ProjectImageField image={image} onChange={setImage} disabled={busy} />
         {error && <p className="projects-error" role="alert">{error}</p>}
         <div className="projects-form-actions">
             <button type="submit" className="projects-primary" disabled={busy}>Create Project</button>

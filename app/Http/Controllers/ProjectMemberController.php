@@ -52,8 +52,17 @@ class ProjectMemberController extends Controller
     {
         Gate::authorize('manageMembers', $project);
 
-        $member = ProjectMember::where('project_id', $project->id)->where('user_id', $userId)->firstOrFail();
-        $member->update(['role_id' => $request->role_id]);
+        $member = DB::transaction(function () use ($request, $project, $userId) {
+            Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
+            $member = ProjectMember::where('project_id', $project->id)->where('user_id', $userId)->firstOrFail();
+            $managerRoleId = Role::findByName('manager', 'web')->id;
+            if ((int) $request->role_id !== (int) $managerRoleId) {
+                $this->guardLastManager($project, $member, $managerRoleId);
+            }
+            $member->update(['role_id' => $request->role_id]);
+
+            return $member;
+        });
 
         return new ProjectMemberResource($member->load(['user', 'role']));
     }
@@ -62,13 +71,26 @@ class ProjectMemberController extends Controller
     {
         Gate::authorize('manageMembers', $project);
 
-        $member = ProjectMember::with('user')->where('project_id', $project->id)->where('user_id', $userId)->firstOrFail();
-
-        DB::transaction(function () use ($member, $project) {
+        DB::transaction(function () use ($userId, $project) {
+            // Role changes and removals share this lock to preserve at least one manager.
+            Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
+            $member = ProjectMember::with('user')->where('project_id', $project->id)->where('user_id', $userId)->firstOrFail();
+            $this->guardLastManager($project, $member, Role::findByName('manager', 'web')->id);
             $this->activities->log(request()->user(), $project, 'project.member_removed', "mengeluarkan {$member->user->name} dari project");
             $member->delete();
         });
 
         return response()->json(null, 204);
+    }
+
+    private function guardLastManager(Project $project, ProjectMember $member, int $managerRoleId): void
+    {
+        if ((int) $member->role_id === $managerRoleId) {
+            abort_if(
+                ! $project->members()->where('role_id', $managerRoleId)->where('id', '!=', $member->id)->exists(),
+                409,
+                'Project harus memiliki setidaknya satu manager. Tambahkan manager lain terlebih dahulu.'
+            );
+        }
     }
 }

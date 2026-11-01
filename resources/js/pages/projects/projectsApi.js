@@ -6,6 +6,8 @@
 // lewat header `Accept: application/json`.
 
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;
+export const MAX_PROJECT_IMAGE_BYTES = 5 * 1024 * 1024;
+export const PROJECT_IMAGE_TYPES = ['image/jpeg', 'image/png'];
 
 // Referensi STATUS/Screenshot 2026-10-26 at 09.36.05.png
 export const STATUS_OPTIONS = [
@@ -98,12 +100,33 @@ async function allPages(path, { signal } = {}) {
 export const projectsApi = {
     list: options => allPages('/projects', options),
     get: (id, options) => request(`/projects/${id}`, options),
-    create: (payload, options) => request('/projects', { ...options, method: 'POST', body: payload }),
-    update: (id, payload, options) => request(`/projects/${id}`, { ...options, method: 'PATCH', body: payload }),
+    create: (payload, options) => {
+        let body = payload;
+        if (payload.image instanceof File) {
+            body = new FormData();
+            Object.entries(payload).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) body.append(key, value instanceof File ? value : String(value));
+            });
+        }
+        return request('/projects', { ...options, method: 'POST', body });
+    },
+    update: (id, payload, options) => {
+        if (payload.image instanceof File) {
+            // PHP parses multipart uploads on POST; Laravel handles the method override.
+            const body = new FormData();
+            body.append('_method', 'PATCH');
+            Object.entries(payload).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) body.append(key, value instanceof File ? value : String(value));
+            });
+            return request(`/projects/${id}`, { ...options, method: 'POST', body });
+        }
+        return request(`/projects/${id}`, { ...options, method: 'PATCH', body: payload });
+    },
     remove: (id, options) => request(`/projects/${id}`, { ...options, method: 'DELETE' }),
 
     members: (id, options) => allPages(`/projects/${id}/members`, options),
     addMember: (id, payload, options) => request(`/projects/${id}/members`, { ...options, method: 'POST', body: payload }),
+    removeMember: (id, userId, options) => request(`/projects/${id}/members/${userId}`, { ...options, method: 'DELETE' }),
     tasks: (id, options) => allPages(`/projects/${id}/tasks`, options),
     activities: (id, options) => allPages(`/projects/${id}/activities`, options),
     taskActivities: (taskId, options) => allPages(`/tasks/${taskId}/activities`, options),

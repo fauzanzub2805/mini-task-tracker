@@ -16,6 +16,9 @@ class ProjectResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
+            'image_url' => $this->image_path
+                ? route('projects.image', ['project' => $this->id, 'v' => substr(hash('sha256', $this->image_path), 0, 16)], false)
+                : null,
             'created_by_id' => $this->created_by_id,
             'members_count' => $this->whenCounted('members'),
             'tasks_count' => $this->whenCounted('tasks'),

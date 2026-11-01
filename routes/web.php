@@ -46,6 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/projects', [ProjectController::class, 'store']);
     Route::get('/projects/{project}', [ProjectController::class, 'show']);
     Route::patch('/projects/{project}', [ProjectController::class, 'update']);
+    Route::get('/projects/{project}/image', [ProjectController::class, 'image'])->name('projects.image');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
 
     Route::get('/projects/{project}/members', [ProjectMemberController::class, 'index']);

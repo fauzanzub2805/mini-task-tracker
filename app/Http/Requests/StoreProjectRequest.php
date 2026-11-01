@@ -16,6 +16,7 @@ class StoreProjectRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:200'],
             'description' => ['nullable', 'string'],
+            'image' => ['sometimes', 'required', 'image', 'mimes:jpg,jpeg,png', 'mimetypes:image/jpeg,image/png', 'max:5120'],
         ];
     }
 }

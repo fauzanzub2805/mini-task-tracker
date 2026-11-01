@@ -3,6 +3,8 @@ import { CalendarPicker } from './CalendarPicker.jsx';
 import {
     formatDay,
     formatCommentStamp,
+    MAX_PROJECT_IMAGE_BYTES,
+    PROJECT_IMAGE_TYPES,
     notifyProjectsChanged,
     priorityKey,
     priorityLabel,
@@ -122,6 +124,50 @@ export function SettingsTab({ project, members = [], canManage, navigate, onRefr
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
+    const [image, setImage] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const [savedImageUrl, setSavedImageUrl] = useState(project.image_url ?? null);
+    const [removeImage, setRemoveImage] = useState(false);
+    const [imageError, setImageError] = useState('');
+    const [draggingImage, setDraggingImage] = useState(false);
+    const canManageMembers = project.permissions?.manageMembers ?? canManage;
+    const imageInputRef = useRef(null);
+
+    useEffect(() => {
+        setSavedImageUrl(project.image_url ?? null);
+    }, [project.id, project.image_url]);
+
+    useEffect(() => {
+        setImage(null);
+        setRemoveImage(false);
+        setImageError('');
+        if (imageInputRef.current) imageInputRef.current.value = '';
+    }, [project.id]);
+
+    useEffect(() => {
+        if (!image) { setPreviewUrl(null); return undefined; }
+        const url = URL.createObjectURL(image);
+        setPreviewUrl(url);
+        return () => URL.revokeObjectURL(url);
+    }, [image]);
+
+    function selectImage(files) {
+        if (busy || !files?.length) return;
+        if (files.length !== 1) {
+            setImageError('Pilih satu gambar saja.');
+            return;
+        }
+        const file = files[0];
+        if (!PROJECT_IMAGE_TYPES.includes(file.type) || file.size > MAX_PROJECT_IMAGE_BYTES) {
+            setImageError('Pilih gambar JPEG, JPG, atau PNG maksimal 5 MB.');
+            return;
+        }
+        setImageError('');
+        setImage(file);
+        setRemoveImage(false);
+    }
+
+    const displayedImageUrl = removeImage ? null : (image ? previewUrl : savedImageUrl);
 
     const [people, setPeople] = useState([]);
     const [peopleError, setPeopleError] = useState('');
@@ -129,6 +175,8 @@ export function SettingsTab({ project, members = [], canManage, navigate, onRefr
     const [memberBusy, setMemberBusy] = useState(false);
     const [memberError, setMemberError] = useState('');
     const [memberNotice, setMemberNotice] = useState('');
+    const [removingMemberId, setRemovingMemberId] = useState(null);
+    const managerCount = members.filter(member => member.role?.name === 'manager').length;
 
     // Draft nama/deskripsi tidak boleh tertimpa polling selama belum disimpan.
     const dirtyRef = useRef(false);
@@ -144,13 +192,13 @@ export function SettingsTab({ project, members = [], canManage, navigate, onRefr
     }, [project.id, project.name, project.description]);
 
     useEffect(() => {
-        if (!canManage) return undefined;
+        if (!canManageMembers) return undefined;
         let alive = true;
         projectsApi.users()
             .then(rows => { if (alive) { setPeople(rows); setPeopleError(''); } })
             .catch(failure => { if (alive) setPeopleError(failure.message); });
         return () => { alive = false; };
-    }, [canManage]);
+    }, [canManageMembers]);
 
     const roleId = staffRoleId(members);
     const existingIds = useMemo(() => new Set(members.map(member => member.user_id)), [members]);
@@ -161,7 +209,16 @@ export function SettingsTab({ project, members = [], canManage, navigate, onRefr
         if (!name.trim()) { setError('Nama project wajib diisi.'); return; }
         setBusy(true); setError(''); setNotice('');
         try {
-            await projectsApi.update(project.id, { name: name.trim(), description });
+            const result = await projectsApi.update(project.id, {
+                name: name.trim(), description,
+                ...(image ? { image } : {}),
+                ...(removeImage ? { remove_image: true } : {}),
+            });
+            const updated = result?.data ?? result;
+            if (updated && 'image_url' in updated) setSavedImageUrl(updated.image_url);
+            setImage(null);
+            setRemoveImage(false);
+            setImageError('');
             dirtyRef.current = false;
             notifyProjectsChanged();
             setNotice('Perubahan project disimpan.');
@@ -190,6 +247,23 @@ export function SettingsTab({ project, members = [], canManage, navigate, onRefr
         }
     }
 
+    async function removeMember(member) {
+        if (!canManageMembers || memberBusy) return;
+        const memberName = member.user?.name ?? `User #${member.user_id}`;
+        if (!window.confirm(`Remove ${memberName} from this project? This only removes membership, not their user account.`)) return;
+        setMemberBusy(true); setRemovingMemberId(member.user_id); setMemberError(''); setMemberNotice('');
+        try {
+            await projectsApi.removeMember(project.id, member.user_id);
+            setMemberNotice(`${memberName} removed from project.`);
+            notifyProjectsChanged();
+            onRefresh?.();
+        } catch (failure) {
+            setMemberError(failure.message);
+        } finally {
+            setMemberBusy(false); setRemovingMemberId(null);
+        }
+    }
+
     async function remove() {
         if (!window.confirm(`Hapus project "${project.name}"?`)) return;
         setBusy(true); setError(''); setNotice('');
@@ -204,21 +278,52 @@ export function SettingsTab({ project, members = [], canManage, navigate, onRefr
         }
     }
 
-    if (!canManage) {
+    if (!canManage && !canManageMembers) {
         return <div className="projects-setting" role="tabpanel">
             <p className="projects-empty">Hanya Project Manager yang dapat mengubah pengaturan project.</p>
         </div>;
     }
 
     return <div className="projects-setting" role="tabpanel">
-        <form className="projects-form" onSubmit={save}>
+        {canManage && <form className="projects-form" onSubmit={save}>
             <div className="projects-field">
                 <label className="projects-field-label" htmlFor="projects-setting-name">Project Name</label>
-                <div className="projects-field-body"><input id="projects-setting-name" value={name} maxLength={200} onChange={event => { dirtyRef.current = true; setName(event.target.value); }} /></div>
+                <div className="projects-field-body"><input id="projects-setting-name" disabled={busy} value={name} maxLength={200} onChange={event => { dirtyRef.current = true; setName(event.target.value); }} /></div>
             </div>
             <div className="projects-field">
                 <label className="projects-field-label" htmlFor="projects-setting-description">Description</label>
-                <div className="projects-field-body"><textarea id="projects-setting-description" rows={5} value={description} onChange={event => { dirtyRef.current = true; setDescription(event.target.value); }} /></div>
+                <div className="projects-field-body"><textarea id="projects-setting-description" disabled={busy} rows={5} value={description} onChange={event => { dirtyRef.current = true; setDescription(event.target.value); }} /></div>
+            </div>
+            <div className="projects-field projects-image-card">
+                <label className="projects-field-label" htmlFor="projects-setting-image">Image</label>
+                <div className="projects-field-body projects-image-editor">
+                    <input ref={imageInputRef} id="projects-setting-image" className="projects-image-input" type="file" accept="image/jpeg,image/png,.jpg,.jpeg,.png" disabled={busy} onChange={event => {
+                        selectImage(event.target.files); event.target.value = '';
+                    }} aria-describedby="projects-image-help" />
+                    <button type="button" className={`projects-image-dropzone${draggingImage ? ' is-dragging' : ''}`} disabled={busy}
+                        aria-label={displayedImageUrl ? 'Replace Image' : 'Choose Image'} aria-describedby="projects-image-help"
+                        onClick={() => imageInputRef.current?.click()}
+                        onDragOver={event => { event.preventDefault(); if (!busy) setDraggingImage(true); }}
+                        onDragLeave={() => setDraggingImage(false)}
+                        onDrop={event => { event.preventDefault(); setDraggingImage(false); selectImage(event.dataTransfer.files); }}>
+                        {displayedImageUrl ? <img className="projects-image-preview" src={displayedImageUrl} alt="Project image preview" /> : <svg className="projects-image-icon" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
+                            <rect x="8" y="8" width="64" height="64" rx="8" />
+                            <circle cx="27" cy="27" r="6" />
+                            <path d="M9 57 30 38l15 14 10-10 17 17" />
+                        </svg>}
+                        <span className="projects-image-prompt">{displayedImageUrl ? 'Drop or click to replace image' : 'Drop your image here'}</span>
+                        <span id="projects-image-help" className="projects-image-help">Max 5 MB, only JPEG, JPG, PNG accepted</span>
+                    </button>
+                    <p className="projects-image-save-note">Click Save Changes to save your image changes.</p>
+                    {(image || savedImageUrl) && !removeImage && <button type="button" className="projects-secondary" disabled={busy} onClick={() => {
+                        setImage(null); setRemoveImage(true); setImageError('');
+                    }}>Remove Image</button>}
+                    {(image || removeImage) && <button type="button" className="projects-secondary" disabled={busy} onClick={() => {
+                        setImage(null); setRemoveImage(false); setImageError('');
+                    }}>Cancel Image Change</button>}
+                    {removeImage && <p role="status">Gambar akan dihapus saat perubahan disimpan.</p>}
+                    {imageError && <p className="projects-error" role="alert">{imageError}</p>}
+                </div>
             </div>
             {error && <p className="projects-error" role="alert">{error}</p>}
             {notice && <p className="projects-notice" role="status">{notice}</p>}
@@ -226,7 +331,7 @@ export function SettingsTab({ project, members = [], canManage, navigate, onRefr
                 <button type="submit" className="projects-primary" disabled={busy}>Save Changes</button>
                 <button type="button" className="projects-secondary" disabled={busy} onClick={remove}>Delete Project</button>
             </div>
-        </form>
+        </form>}
 
         <section className="projects-setting-members" aria-label="Project Members">
             <h3>Project Members</h3>
@@ -235,13 +340,19 @@ export function SettingsTab({ project, members = [], canManage, navigate, onRefr
                     <span className="projects-avatar" aria-hidden="true">{member.user?.name?.slice(0, 1)}</span>
                     {member.user?.name ?? `User #${member.user_id}`}
                     <small> · {member.role?.name ?? 'staff'}</small>
+                    {canManageMembers && <button type="button" className="projects-secondary projects-member-remove"
+                        aria-label={`Remove ${member.user?.name ?? `User #${member.user_id}`} from project`}
+                        disabled={memberBusy || (member.role?.name === 'manager' && managerCount <= 1)}
+                        title={member.role?.name === 'manager' && managerCount <= 1 ? 'Add another manager before removing the last manager.' : undefined}
+                        onClick={() => removeMember(member)}>{removingMemberId === member.user_id ? 'Removing…' : 'Remove'}</button>}
                 </li>)}
             </ul>
-            <form className="projects-member-form" onSubmit={addMember} aria-label="Add Project Member">
+            {canManageMembers && <form className="projects-member-form" onSubmit={addMember} aria-label="Add Project Member">
                 <label className="projects-field-label" htmlFor="projects-setting-new-member">Add existing user</label>
                 <div className="projects-member-row">
                     <select
                         id="projects-setting-new-member"
+                        disabled={memberBusy}
                         value={newMemberId}
                         onChange={event => setNewMemberId(event.target.value)}
                     >
@@ -253,7 +364,7 @@ export function SettingsTab({ project, members = [], canManage, navigate, onRefr
                 {peopleError && <p className="projects-error" role="alert">{peopleError}</p>}
                 {memberError && <p className="projects-error" role="alert">{memberError}</p>}
                 {memberNotice && <p className="projects-notice" role="status">{memberNotice}</p>}
-            </form>
+            </form>}
         </section>
     </div>;
 }
