@@ -48,7 +48,7 @@ class CreateProjectImageTest extends ApiTestCase
             UploadedFile::fake()->image('large.jpg')->size(5121),
             UploadedFile::fake()->image('animation.gif'),
             UploadedFile::fake()->image('unsupported.webp'),
-            UploadedFile::fake()->createWithContent('fake.jpg', '<html>not an image</html>'),
+            UploadedFile::fake()->createWithContent('fake.jpg', '<html>not an image</html>')->mimeType('text/html'),
             UploadedFile::fake()->createWithContent('vector.svg', '<svg xmlns="http://www.w3.org/2000/svg"></svg>'),
         ] as $image) {
             $this->post('/projects', ['name' => 'Invalid', 'image' => $image], ['Accept' => 'application/json'])

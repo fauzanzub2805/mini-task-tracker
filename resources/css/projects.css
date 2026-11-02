@@ -196,7 +196,15 @@
 .projects-file-list li { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 5px; background: #eff4fc; font-size: 12px; overflow-wrap: anywhere; }
 .projects-file-list li a { color: #a3121f; font-weight: 600; }
 .projects-file-list li button { margin-left: auto; width: 24px; height: 24px; border-radius: 50%; color: #46536a; font-size: 16px; }
-.projects-file-existing li { background: #f6f8fc; }
+.projects-file-existing li { background: #f6f8fc; flex-wrap: wrap; }
+.projects-task-attachment-thumb { flex: 0 0 56px; border-radius: 5px; overflow: hidden; }
+.projects-task-attachment-thumb img { display: block; width: 56px; height: 56px; object-fit: cover; }
+.projects-task-attachment-details { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 100px; }
+.projects-task-attachment-details small { color: #61748d; }
+.projects-task-attachment-download { flex-shrink: 0; padding: 7px 10px; border: 1px solid #dce3ee; border-radius: 5px; background: #fff; }
+.projects-task-attachment-download:hover { background: #e2e8f0; }
+.projects-file-existing li button { flex-shrink: 0; margin-left: 0; }
+.projects-file-existing a:focus-visible, .projects-file-existing button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
 
 /* Task detail layout */
 .projects-task-detail { display: grid; gap: 16px; }

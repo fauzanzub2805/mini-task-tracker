@@ -22,6 +22,10 @@ class TaskAttachmentResource extends JsonResource
                 'task' => $this->task_id,
                 'attachment' => $this->id,
             ]),
+            'preview_url' => route('tasks.attachments.preview', [
+                'task' => $this->task_id,
+                'attachment' => $this->id,
+            ]),
             'created_at' => $this->created_at,
         ];
     }

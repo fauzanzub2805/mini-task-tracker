@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarPicker } from './CalendarPicker.jsx';
+import { TaskAttachmentItem } from './TaskAttachmentItem.jsx';
 import { initials } from '../../lib/format.js';
 import { ActivityTab, ProjectTabs, SettingsTab } from './ProjectDetail.jsx';
 import {
@@ -670,11 +671,7 @@ export function TaskDetail({ taskId, project, members, activities, priorities, u
                                     </li>)}
                                 </ul>}
                                 {attachments.length > 0 && <ul className="projects-file-list projects-file-existing">
-                                    {attachments.map(attachment => <li key={attachment.id}>
-                                        <a href={attachment.url} target="_blank" rel="noreferrer">{attachment.name}</a>
-                                        <small>{formatFileSize(attachment.size)}</small>
-                                        <button type="button" aria-label={`Hapus lampiran ${attachment.name}`} onClick={() => removeAttachment(attachment)}>×</button>
-                                    </li>)}
+                                    {attachments.map(attachment => <TaskAttachmentItem key={attachment.id} attachment={attachment} onRemove={removeAttachment} />)}
                                 </ul>}
                             </div>
                         </section>

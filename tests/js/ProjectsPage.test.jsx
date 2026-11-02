@@ -402,6 +402,18 @@ it('does not offer comment deletion', async () => {
     expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
 });
 
+it('opens saved Task Info attachments as previews and keeps download separate', async () => {
+    const { state } = setup();
+    state.attachments = [{ id: 7, name: 'cover.png', size: 2048, mime_type: 'image/png', url: '/tasks/11/attachments/7', preview_url: '/tasks/11/attachments/7/preview' }];
+    render(<ProjectsPage user={manager} path="/projects/1/tasks/11" />);
+    const preview = await screen.findByRole('link', { name: 'cover.png' });
+    expect(preview).toHaveAttribute('href', '/tasks/11/attachments/7/preview');
+    expect(preview).toHaveAttribute('target', '_blank');
+    expect(screen.getByAltText('Thumbnail cover.png')).toHaveAttribute('src', '/tasks/11/attachments/7/preview');
+    expect(screen.getByRole('link', { name: 'Download cover.png' })).toHaveAttribute('href', '/tasks/11/attachments/7');
+    expect(screen.getByRole('button', { name: 'Hapus lampiran cover.png' })).toBeInTheDocument();
+});
+
 it('uses task labels for detail tabs and preserves Comments', async () => {
     setup();
     render(<ProjectsPage user={manager} path="/projects/1/tasks/11" />);

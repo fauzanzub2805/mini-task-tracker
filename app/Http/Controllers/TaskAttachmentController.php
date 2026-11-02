@@ -75,6 +75,38 @@ class TaskAttachmentController extends Controller
         return $disk->download($attachment->path, $attachment->name);
     }
 
+    /** Preview only safe content types; never trust the uploaded MIME claim. */
+    public function preview(Task $task, TaskAttachment $attachment)
+    {
+        abort_unless((int) $attachment->task_id === (int) $task->id, Response::HTTP_NOT_FOUND);
+        Gate::authorize('view', $task);
+
+        $disk = Storage::disk('local');
+        abort_unless($disk->exists($attachment->path), Response::HTTP_NOT_FOUND);
+        $mime = $disk->mimeType($attachment->path);
+        $headers = [
+            'X-Content-Type-Options' => 'nosniff',
+            'Content-Security-Policy' => "sandbox; default-src 'none'; frame-ancestors 'none'",
+            'Cache-Control' => 'private, no-store, max-age=0',
+        ];
+
+        if (! in_array($mime, ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf', 'text/plain'], true)) {
+            return response()->view('task-attachment-preview', [
+                'attachment' => $attachment,
+                'downloadUrl' => route('tasks.attachments.download', ['task' => $task->id, 'attachment' => $attachment->id]),
+            ], 200, array_merge($headers, [
+                'Content-Security-Policy' => "default-src 'none'; frame-ancestors 'none'",
+            ]));
+        }
+
+        $response = response()->file($disk->path($attachment->path), array_merge($headers, [
+            'Content-Type' => $mime === 'text/plain' ? 'text/plain; charset=UTF-8' : $mime,
+        ]));
+        $response->setContentDisposition('inline', $attachment->name);
+
+        return $response;
+    }
+
     public function destroy(Task $task, TaskAttachment $attachment): Response
     {
         abort_unless((int) $attachment->task_id === (int) $task->id, Response::HTTP_NOT_FOUND);
