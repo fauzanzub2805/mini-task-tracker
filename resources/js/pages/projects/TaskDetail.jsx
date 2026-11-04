@@ -512,7 +512,7 @@ export function TaskDetail({ taskId, project, members, activities, priorities, u
         localDirty.current = false;
         dirtyRef.current = false;
         setPending([]); setFileError(''); setError(''); setNotice('');
-        setTab('project-info');
+        setTab(new URLSearchParams(window.location.search).get('tab') === 'comments' ? 'comments' : 'project-info');
     }, [taskId, dirtyRef]);
 
     function update(key, value) {

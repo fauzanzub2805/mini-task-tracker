@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\ProjectMember;
 use App\Models\User;
 use App\Services\ActivityLogger;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -41,6 +42,7 @@ class ProjectMemberController extends Controller
             $name = User::find($request->user_id)->name;
             $role = Role::find($request->role_id)->name;
             $this->activities->log($request->user(), $project, 'project.member_added', "menambahkan {$name} sebagai {$role}");
+            app(NotificationService::class)->projectAdded($project, (int) $member->user_id, $request->user());
 
             return $member;
         });

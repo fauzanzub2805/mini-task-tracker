@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 // Kartu notifikasi tetap memakai popup; ikon Chat langsung menuju halaman
 // Profile > Message dan menampilkan jumlah pesan belum dibaca dari backend.
 // Items notifikasi: { id, recipientId, title, body, readAt }.
-export function HeaderInbox({ userId, notifications = [], chatUnread = 0 }) {
+export function HeaderInbox({ userId, notifications = [], chatUnread = 0, unreadCount, loading = false, error = '', busy = false, onRead, onReadAll, onRetry, onLoadMore }) {
     const [open, setOpen] = useState(false);
     const [read, setRead] = useState([]);
     const root = useRef(null);
@@ -11,7 +11,7 @@ export function HeaderInbox({ userId, notifications = [], chatUnread = 0 }) {
     const closeButton = useRef(null);
     const items = userId == null ? [] : notifications.filter(item => String(item.recipientId) === String(userId));
     const isUnread = item => !item.readAt && !read.includes(item.id);
-    const unread = items.filter(isUnread).length;
+    const unread = unreadCount ?? items.filter(isUnread).length;
 
     useEffect(() => {
         if (!open) return undefined;
@@ -47,7 +47,7 @@ export function HeaderInbox({ userId, notifications = [], chatUnread = 0 }) {
                 <path d="M5 17V10a7 7 0 0 1 14 0v7l1 2H4l1-2Z" />
                 <path d="M12 2V1m0 18v2" />
             </svg>
-            {unread > 0 && <span className="dashboard-unread-dot" aria-hidden="true" />}
+            {unread > 0 && <><span className="dashboard-unread-dot" aria-hidden="true" /><span className="dashboard-notification-count" aria-hidden="true">{unread > 99 ? '99+' : unread}</span></>}
         </button>
 
         <a
@@ -69,11 +69,16 @@ export function HeaderInbox({ userId, notifications = [], chatUnread = 0 }) {
                 <h2 id="dashboard-inbox-title">Notifikasi</h2>
                 <button ref={closeButton} type="button" aria-label="Tutup Notifikasi" onClick={() => { trigger.current?.focus(); setOpen(false); }}>×</button>
             </div>
+            {onReadAll && unread > 0 && <button type="button" className="dashboard-notification-action" disabled={busy} onClick={onReadAll}>Tandai semua dibaca</button>}
+            {error && <div className="dashboard-notification-error" role="alert"><p>{error}</p>{onRetry && <button type="button" disabled={busy} onClick={onRetry}>Coba lagi</button>}</div>}
+            {loading && <p role="status" className="dashboard-inbox-empty">Memuat notifikasi…</p>}
             {items.length ? <ul>{items.map(item => <li key={item.id} className={isUnread(item) ? 'is-unread' : ''}>
-                <h3>{item.title}</h3>
+                <h3>{item.url ? <a href={item.url}>{item.title}</a> : item.title}</h3>
                 <p>{item.body}</p>
-                {isUnread(item) && <button type="button" onClick={() => setRead(previous => [...previous, item.id])}>Tandai dibaca</button>}
-            </li>)}</ul> : <p className="dashboard-inbox-empty">Belum ada notifikasi.</p>}
+                {item.createdAt && <time dateTime={item.createdAt}>{new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(item.createdAt))}</time>}
+                {isUnread(item) && <button type="button" disabled={busy} onClick={() => onRead ? onRead(item.id) : setRead(previous => [...previous, item.id])}>Tandai dibaca</button>}
+            </li>)}</ul> : !loading && !error && <p className="dashboard-inbox-empty">Belum ada notifikasi.</p>}
+            {onLoadMore && <button type="button" className="dashboard-notification-action" disabled={busy} onClick={onLoadMore}>Muat lebih banyak</button>}
         </section>}
     </div>;
 }

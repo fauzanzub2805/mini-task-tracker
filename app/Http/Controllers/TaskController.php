@@ -11,6 +11,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use App\Services\ActivityLogger;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -80,6 +81,8 @@ class TaskController extends Controller
             ]);
 
             $task->syncAssignees($assigneeIds);
+            app(NotificationService::class)->taskEvent($task, $request->user(), $assigneeIds,
+                'task.assigned', 'Penugasan task baru', "{$request->user()->name} menugaskan Anda pada task {$task->title}.");
 
             $this->activities->log($request->user(), $project, 'task.created', "membuat task \"{$task->title}\"", $task);
 
@@ -148,6 +151,22 @@ class TaskController extends Controller
             }
 
             $actor = $request->user();
+            $notifications = app(NotificationService::class);
+            $currentIds = $task->assigneeIds();
+            if ($assigneesChanged) {
+                $notifications->taskEvent($task, $actor, array_values(array_diff($currentIds, $oldAssigneeIds)),
+                    'task.assigned', 'Penugasan task baru', "{$actor->name} menugaskan Anda pada task {$task->title}.");
+            }
+            $recipients = array_merge($currentIds, [$task->created_by_id]);
+            if (array_key_exists('status', $dirty)) {
+                $notifications->taskEvent($task, $actor, $recipients, 'task.status_changed', 'Status task berubah',
+                    "{$actor->name} mengubah status {$task->title}: {$oldStatus} → {$task->status}.");
+            }
+            if (array_key_exists('due_date', $dirty)) {
+                $due = $task->due_date?->toDateString() ?? 'tanpa deadline';
+                $notifications->taskEvent($task, $actor, $recipients, 'task.deadline_changed', 'Deadline task berubah',
+                    "{$actor->name} mengubah deadline {$task->title} menjadi {$due}.");
+            }
 
             // Satu perubahan = satu baris aktivitas.
             if (array_key_exists('status', $dirty)) {

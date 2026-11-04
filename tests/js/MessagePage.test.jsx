@@ -49,6 +49,23 @@ afterEach(() => {
     document.head.innerHTML = '';
 });
 
+it('opens the sender conversation directly from a notification link', async () => {
+    const previous = window.location.href;
+    window.history.replaceState({}, '', '/profile/messages?user=2');
+    try {
+        stubFetch(url => {
+            if (url.startsWith('/messaging/conversations')) return json({ data: [conversation()], unread_count: 1 });
+            if (url === '/messaging/users/2/messages') return json({ data: [message()] });
+            return json({ data: [], unread_count: 0 });
+        });
+        render(<MessagePage user={me} />);
+        expect(await screen.findByRole('heading', { name: 'Henry Dholi' })).toBeVisible();
+        expect(await screen.findByText('Reply to message')).toBeVisible();
+    } finally {
+        window.history.replaceState({}, '', previous);
+    }
+});
+
 it('renders the authenticated name, real conversations and green/red indicators', async () => {
     const fetch = stubFetch(url => {
         if (url.startsWith('/messaging/conversations')) {

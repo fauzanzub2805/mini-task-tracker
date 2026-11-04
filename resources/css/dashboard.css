@@ -36,6 +36,12 @@ html:has(.dashboard-shell) { scroll-behavior: smooth; scroll-padding-top: 100px;
 .dashboard-inbox-panel h3 { font-size: 14px; font-weight: 600; }
 .dashboard-inbox-panel li p { font-size: 13px; color: #61748d; }
 .dashboard-inbox-panel li button { margin-top: 8px; font-size: 12px; color: #2454bb; }
+.dashboard-notification-count { position: absolute; right: -5px; top: -5px; min-width: 17px; padding: 1px 4px; border-radius: 12px; background: #a3121f; color: #fff; font-size: 10px; }
+.dashboard-notification-action { padding: 10px 16px; color: #2454bb; font-size: 12px; }
+.dashboard-notification-error { padding: 10px 16px; color: #a3121f; font-size: 12px; }
+.dashboard-inbox-panel li time { display: block; margin-top: 6px; font-size: 11px; color: #61748d; }
+.dashboard-inbox-panel h3 a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.dashboard-inbox-panel button:disabled { opacity: .5; cursor: wait; }
 .dashboard-account strong, .dashboard-account small { display: block; text-align: right; }
 .dashboard-account strong { font-size: 14px; }
 .dashboard-account small { font-size: 11px; color: #61748d; }

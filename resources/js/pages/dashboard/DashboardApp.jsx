@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAppNavigation } from '../../lib/useAppNavigation.js';
 import { HeaderInbox } from './HeaderInbox.jsx';
+import { LiveHeaderInbox } from './LiveHeaderInbox.jsx';
 import { MessagePage } from '../profile/MessagePage.jsx';
 import { ProfilePage } from '../profile/ProfilePage.jsx';
 import { messagingApi } from '../../lib/messagingApi.js';
@@ -148,7 +149,7 @@ export function DashboardApp({ user = null, notifications = [], page: initialPag
             <header className="dashboard-header">
                 <button className="dashboard-menu-toggle" aria-label="Buka/tutup navigasi" aria-expanded={mobileOpen} aria-controls="dashboard-sidebar" onClick={() => setMobileOpen(!mobileOpen)}>☰</button>
                 <time dateTime={new Date().toISOString()}>{new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date())}</time>
-                <div className="dashboard-account"><HeaderInbox key={user?.id ?? 'guest'} userId={user?.id} notifications={notifications} chatUnread={chatUnread} /><div><strong>{name}</strong><small>{role}</small></div><span className="dashboard-avatar" aria-hidden="true">{initial}</span></div>
+                <div className="dashboard-account">{user?.id ? <LiveHeaderInbox key={user.id} userId={user.id} chatUnread={chatUnread} /> : <HeaderInbox notifications={notifications} />}<div><strong>{name}</strong><small>{role}</small></div><span className="dashboard-avatar" aria-hidden="true">{initial}</span></div>
             </header>
             <main className="dashboard-content">
                 {page === 'messages' && <MessagePage user={user} onUnreadChange={setChatUnread} />}

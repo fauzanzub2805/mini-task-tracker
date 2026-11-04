@@ -82,6 +82,17 @@ export function MessagePage({ user, onUnreadChange }) {
     const [files, setFiles] = useState({});
     const [visibleTick, setVisibleTick] = useState(0);
 
+    const linkedConversationOpened = useRef(false);
+    useEffect(() => {
+        if (linkedConversationOpened.current) return;
+        const target = Number(new URLSearchParams(window.location.search).get('user'));
+        const partner = conversations.find(item => item.user.id === target)?.user;
+        if (partner) {
+            linkedConversationOpened.current = true;
+            setSelected(partner);
+        }
+    }, [conversations]);
+
     const selectedRef = useRef(null);
     const threadSequence = useRef(0);
     const listSequence = useRef(0);

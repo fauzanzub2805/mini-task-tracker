@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreDirectMessageRequest;
 use App\Http\Resources\DirectMessageResource;
+use App\Models\AppNotification;
 use App\Models\DirectMessage;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class DirectMessageController extends Controller
@@ -152,17 +155,29 @@ class DirectMessageController extends Controller
         $file = $request->file('attachment');
         $path = $file?->store('direct-messages/'.$auth->id, 'local');
 
-        $message = DirectMessage::create([
-            'sender_id' => $auth->id,
-            'recipient_id' => $user->id,
-            'body' => trim((string) $request->input('body', '')) !== ''
-                ? $request->input('body')
-                : null,
-            'attachment_path' => $path,
-            'attachment_name' => $file?->getClientOriginalName(),
-            'attachment_mime' => $file?->getClientMimeType(),
-            'attachment_size' => $file?->getSize(),
-        ]);
+        try {
+            $message = DB::transaction(function () use ($auth, $user, $request, $path, $file) {
+                $message = DirectMessage::create([
+                    'sender_id' => $auth->id,
+                    'recipient_id' => $user->id,
+                    'body' => trim((string) $request->input('body', '')) !== ''
+                        ? $request->input('body')
+                        : null,
+                    'attachment_path' => $path,
+                    'attachment_name' => $file?->getClientOriginalName(),
+                    'attachment_mime' => $file?->getClientMimeType(),
+                    'attachment_size' => $file?->getSize(),
+                ]);
+                app(NotificationService::class)->message($message, $auth);
+
+                return $message;
+            });
+        } catch (\Throwable $failure) {
+            if ($path) {
+                Storage::disk('local')->delete($path);
+            }
+            throw $failure;
+        }
 
         return (new DirectMessageResource($message->fresh()))
             ->response()
@@ -188,6 +203,11 @@ class DirectMessageController extends Controller
             ->where('sender_id', $user->id)
             ->whereNull('read_at')
             ->where('id', '<=', $data['through_id'])
+            ->update(['read_at' => now()]);
+
+        AppNotification::where('user_id', $auth->id)->whereNull('read_at')
+            ->whereIn('message_id', DirectMessage::where('recipient_id', $auth->id)
+                ->where('sender_id', $user->id)->where('id', '<=', $data['through_id'])->select('id'))
             ->update(['read_at' => now()]);
 
         $unreadInConversation = DirectMessage::query()

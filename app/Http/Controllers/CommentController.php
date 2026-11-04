@@ -7,6 +7,7 @@ use App\Http\Resources\CommentResource;
 use App\Models\Comment;
 use App\Models\Task;
 use App\Services\ActivityLogger;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -55,6 +56,7 @@ class CommentController extends Controller
             }
 
             $this->activities->log($request->user(), $task->project_id, 'comment.created', 'menambahkan komentar', $task);
+            app(NotificationService::class)->mentions($comment, $task, $request->user());
 
             return $comment;
         });
