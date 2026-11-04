@@ -414,17 +414,17 @@ it('opens saved Task Info attachments as previews and keeps download separate', 
     expect(screen.getByRole('button', { name: 'Hapus lampiran cover.png' })).toBeInTheDocument();
 });
 
-it('uses task labels for detail tabs and preserves Comments', async () => {
+it('uses task detail labels while preserving Comments and Project Setting', async () => {
     setup();
     render(<ProjectsPage user={manager} path="/projects/1/tasks/11" />);
 
     await screen.findByDisplayValue('Fiksasi Tim Google');
     expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual([
-        'Task Info', 'Comments', 'Task Activity', 'Task Setting',
+        'Task Info', 'Comments', 'Task Activity', 'Project Setting',
     ]);
     expect(screen.getByRole('tab', { name: 'Task Info' })).toHaveAttribute('aria-selected', 'true');
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Task Setting' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Project Setting' }));
     expect(await screen.findByLabelText('Project Name')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('tab', { name: 'Task Info' }));

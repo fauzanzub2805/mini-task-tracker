@@ -595,7 +595,7 @@ export function TaskDetail({ taskId, project, members, activities, priorities, u
         { id: 'project-info', label: 'Task Info' },
         { id: 'comments', label: 'Comments' },
         { id: 'project-activity', label: 'Task Activity' },
-        { id: 'project-setting', label: 'Task Setting' },
+        { id: 'project-setting', label: 'Project Setting' },
     ];
 
     return <>
