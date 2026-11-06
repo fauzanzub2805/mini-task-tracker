@@ -370,7 +370,21 @@ it('lets a project manager add an existing user to the project', async () => {
     expect(await screen.findByText('Anggota ditambahkan ke project.')).toBeInTheDocument();
 });
 
-it('disables the create-task assignee selector when the user cannot manage the project', async () => {
+it.each([manager, { id: 99, name: 'Admin', roles: ['admin'] }])('keeps the create-task assignee selector for $name', async (user) => {
+    const { state } = setup();
+    render(<ProjectsPage user={user} path="/projects/1" />);
+
+    await screen.findByRole('heading', { name: 'Google Vendor', level: 1 });
+    fireEvent.click(screen.getByRole('button', { name: 'Add New Task' }));
+    expect(screen.getByLabelText('Assignee')).toBeEnabled();
+    fireEvent.change(screen.getByLabelText('Assignee'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Assigned task' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add Task' }));
+
+    await waitFor(() => expect(state.lastTaskCreate).toMatchObject({ assignee_id: 2 }));
+});
+
+it('hides the create-task assignee field when the user cannot manage the project', async () => {
     const { state } = setup();
     const { unmount } = render(<ProjectsPage user={manager} path="/projects/1" />);
 
@@ -382,7 +396,9 @@ it('disables the create-task assignee selector when the user cannot manage the p
     render(<ProjectsPage user={staff} path="/projects/1" />);
     await screen.findByRole('heading', { name: 'Google Vendor', level: 1 });
     fireEvent.click(screen.getByRole('button', { name: 'Add New Task' }));
-    expect(screen.getByLabelText('Assignee')).toBeDisabled();
+    expect(screen.queryByLabelText('Assignee')).not.toBeInTheDocument();
+    expect(screen.queryByText('Assignee')).not.toBeInTheDocument();
+    expect(screen.queryByText('Hanya Project Manager yang dapat mengatur assignee task.')).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Task dari staff' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add Task' }));

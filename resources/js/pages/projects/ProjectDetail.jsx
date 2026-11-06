@@ -429,14 +429,13 @@ export function CreateTaskForm({ project, members, priorities, canManage = false
                 </select></div>
             </div>
         </div>
-        <div className="projects-field">
+        {canManage && <div className="projects-field">
             <label className="projects-field-label" htmlFor="projects-task-assignee">Assignee</label>
-            <div className="projects-field-body"><select id="projects-task-assignee" value={form.assignee_id} disabled={!canManage} onChange={event => update('assignee_id', event.target.value)}>
-                <option value="">{canManage ? 'Belum ditugaskan' : 'Ditentukan Project Manager'}</option>
+            <div className="projects-field-body"><select id="projects-task-assignee" value={form.assignee_id} onChange={event => update('assignee_id', event.target.value)}>
+                <option value="">Belum ditugaskan</option>
                 {members.map(member => <option key={member.user_id} value={member.user_id}>{member.user?.name}</option>)}
             </select></div>
-            {!canManage && <p className="projects-assignee-note">Hanya Project Manager yang dapat mengatur assignee task.</p>}
-        </div>
+        </div>}
         <div className="projects-field">
             <span className="projects-field-label">Due Date</span>
             <div className="projects-field-body projects-calendar-body">
