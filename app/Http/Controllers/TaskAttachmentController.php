@@ -22,21 +22,32 @@ class TaskAttachmentController extends Controller
     /** 10 MiB dalam kilobyte, sesuai batas UI (docs/progress/frontend-projects.md). */
     private const MAX_KILOBYTES = 10240;
 
-    /** Unggah satu atau banyak file sekaligus (field `files[]`). */
+    /**
+     * Unggah satu atau banyak file sekaligus (field `files[]`).
+     *
+     * `kind` menentukan peran berkas: 'instruction' (berkas instruksi dari
+     * manager) atau 'submission' (hasil kumpulan pengguna). Keduanya butuh
+     * izin task.update, sehingga Staff pun boleh mengumpulkan ("Submit File"),
+     * konsisten dengan hak Staff mengerjakan task.
+     */
     public function store(Request $request, Task $task): JsonResponse
     {
         Gate::authorize('update', $task);
 
-        $request->validate([
+        $validated = $request->validate([
             'files' => ['required', 'array', 'min:1'],
             'files.*' => ['required', 'file', 'max:'.self::MAX_KILOBYTES],
+            'kind' => ['sometimes', 'in:'.implode(',', TaskAttachment::KINDS)],
         ], [
             'files.required' => 'Pilih minimal satu file.',
             'files.*.max' => 'Ukuran setiap file maksimal 10 MB.',
             'files.*.file' => 'Berkas yang diunggah tidak valid.',
+            'kind.in' => 'Jenis lampiran tidak dikenali.',
         ]);
 
-        $created = DB::transaction(function () use ($request, $task) {
+        $kind = $validated['kind'] ?? TaskAttachment::KIND_INSTRUCTION;
+
+        $created = DB::transaction(function () use ($request, $task, $kind) {
             $rows = [];
 
             foreach ($request->file('files', []) as $file) {
@@ -44,6 +55,7 @@ class TaskAttachmentController extends Controller
 
                 $rows[] = $task->attachments()->create([
                     'uploaded_by_id' => $request->user()->id,
+                    'kind' => $kind,
                     'name' => $file->getClientOriginalName(),
                     'path' => $path,
                     'mime_type' => $file->getClientMimeType(),
@@ -53,6 +65,9 @@ class TaskAttachmentController extends Controller
 
             return $rows;
         });
+
+        // Muat relasi uploader agar "Nama Pengirim" ikut terkirim pada respons.
+        $created = collect($created)->each->load('uploader')->all();
 
         // Daftar yang sama dikirim sebagai `data` (bentuk resource Laravel)
         // sekaligus `attachments` agar widget unggah bisa memakainya langsung.
@@ -111,7 +126,11 @@ class TaskAttachmentController extends Controller
     {
         abort_unless((int) $attachment->task_id === (int) $task->id, Response::HTTP_NOT_FOUND);
 
-        Gate::authorize('update', $task);
+        // Berkas kumpulan (Submitted Files) hanya boleh dihapus Admin Sistem dan
+        // Project Manager: keduanya memegang izin task.delete, sedangkan Staff
+        // tidak. Berkas instruksi tetap mengikuti izin task.update seperti semula.
+        $ability = $attachment->kind === TaskAttachment::KIND_SUBMISSION ? 'delete' : 'update';
+        Gate::authorize($ability, $task);
 
         Storage::disk('local')->delete($attachment->path);
         $attachment->delete();

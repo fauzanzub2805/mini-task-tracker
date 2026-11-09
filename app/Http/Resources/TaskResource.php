@@ -40,6 +40,13 @@ class TaskResource extends JsonResource
             'created_by_id' => $this->created_by_id,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            // Izin yang dihitung dari Policy (termasuk bypass Admin lewat
+            // Gate::before). UI memakainya, mis. untuk menampilkan ikon hapus
+            // pada Submitted Files hanya bagi Admin & Project Manager.
+            'can' => [
+                'update' => (bool) $request->user()?->can('update', $this->resource),
+                'delete' => (bool) $request->user()?->can('delete', $this->resource),
+            ],
         ];
     }
 }

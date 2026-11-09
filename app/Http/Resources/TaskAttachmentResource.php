@@ -15,9 +15,15 @@ class TaskAttachmentResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'kind' => $this->kind,
             'name' => $this->name,
             'size' => (int) $this->size,
             'mime_type' => $this->mime_type,
+            // Pengirim berkas (dipakai sebagai "Nama Pengirim" di Submitted Files).
+            'uploaded_by' => $this->whenLoaded('uploader', fn () => $this->uploader ? [
+                'id' => $this->uploader->id,
+                'name' => $this->uploader->name,
+            ] : null),
             'url' => route('tasks.attachments.download', [
                 'task' => $this->task_id,
                 'attachment' => $this->id,

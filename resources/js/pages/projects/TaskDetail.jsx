@@ -89,6 +89,43 @@ function DropdownChevron() {
     </svg>;
 }
 
+// Ikon berbeda untuk gambar dan berkas lain, mengikuti daftar Submitted Files di Figma.
+function FileKindIcon({ mime }) {
+    const isImage = /^image\//.test(mime || '');
+    return isImage
+        ? <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="16" rx="3" />
+            <circle cx="8.5" cy="9" r="1.6" />
+            <path d="m4 17 4.5-4a1.7 1.7 0 0 1 2.3.1L16 18" />
+            <path d="m14 15 1.8-1.6a1.7 1.7 0 0 1 2.3.1L21 16" />
+        </svg>
+        : <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" />
+            <path d="M14 3v5h5" />
+            <path d="m10.5 13.5 1.5 1.5 3-3" />
+        </svg>;
+}
+
+// Satu baris pada daftar Submitted Files: ikon, nama berkas, nama pengirim,
+// lalu ikon hapus yang hanya tampil bagi yang berwenang (Admin / Project Manager).
+function SubmittedFileItem({ attachment, canDelete, onRemove }) {
+    const sender = attachment.uploaded_by?.name || 'Nama Pengirim';
+    return <li className="projects-submitted-item">
+        <span className="projects-submitted-icon" aria-hidden="true"><FileKindIcon mime={attachment.mime_type} /></span>
+        <a className="projects-submitted-name" href={attachment.url} target="_blank" rel="noopener noreferrer" title={attachment.name}>
+            {attachment.name} <small>{formatFileSize(attachment.size)}</small>
+        </a>
+        <span className="projects-submitted-sender" title={sender}>{sender}</span>
+        {canDelete && <button type="button" className="projects-submitted-delete" aria-label={`Hapus ${attachment.name}`} onClick={() => onRemove(attachment)}>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M9 4h6l1 2h3v2H5V6h3Z" />
+                <path d="M7 8v11a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8" />
+                <path d="M10 11v6M14 11v6" />
+            </svg>
+        </button>}
+    </li>;
+}
+
 function PrioritySelect({ value, options, onChange }) {
     const [open, setOpen] = useState(false);
     const current = options.find(option => String(option.id) === String(value));
@@ -446,6 +483,19 @@ export function TaskDetail({ taskId, project, members, activities, priorities, u
     const localDirty = useRef(false);
 
     const options = useMemo(() => priorityOptions(priorities), [priorities]);
+    // Instructions File vs Submitted Files. Lampiran lama tanpa `kind`
+    // diperlakukan sebagai instruksi (bawaan server juga 'instruction').
+    const instructionFiles = useMemo(
+        () => attachments.filter(item => (item.kind ?? 'instruction') !== 'submission'),
+        [attachments],
+    );
+    const submittedFiles = useMemo(
+        () => attachments.filter(item => item.kind === 'submission'),
+        [attachments],
+    );
+    // Hanya Admin & Project Manager boleh menghapus Submitted Files. `can.delete`
+    // dari server adalah sumber kebenarannya; canManage sebagai cadangan.
+    const canDeleteSubmission = task?.can?.delete ?? canManage;
     // Tab activity task hanya menampilkan aktivitas yang terkait task ini.
     const taskActivities = useMemo(
         () => (activities ?? []).filter(activity => Number(activity.task_id) === Number(taskId)),
@@ -651,7 +701,7 @@ export function TaskDetail({ taskId, project, members, activities, priorities, u
                         </section>
 
                         <section className="projects-files">
-                            <h3>Files</h3>
+                            <h3>Instructions File</h3>
                             <div className="projects-file-box">
                                 <h4 className="projects-file-title">File upload</h4>
                                 <div className="projects-file-row">
@@ -670,12 +720,26 @@ export function TaskDetail({ taskId, project, members, activities, priorities, u
                                         <button type="button" aria-label={`Hapus ${file.name}`} onClick={() => setPending(current => current.filter((_, i) => i !== index))}>×</button>
                                     </li>)}
                                 </ul>}
-                                {attachments.length > 0 && <ul className="projects-file-list projects-file-existing">
-                                    {attachments.map(attachment => <TaskAttachmentItem key={attachment.id} attachment={attachment} onRemove={removeAttachment} />)}
+                                {instructionFiles.length > 0 && <ul className="projects-file-list projects-file-existing">
+                                    {instructionFiles.map(attachment => <TaskAttachmentItem key={attachment.id} attachment={attachment} onRemove={removeAttachment} />)}
                                 </ul>}
                             </div>
                         </section>
                     </div>
+
+                    <section className="projects-submitted">
+                        <h3>Submitted Files</h3>
+                        {submittedFiles.length === 0
+                            ? <p className="projects-empty">Belum ada file yang dikumpulkan.</p>
+                            : <ul className="projects-submitted-list">
+                                {submittedFiles.map(attachment => <SubmittedFileItem
+                                    key={attachment.id}
+                                    attachment={attachment}
+                                    canDelete={canDeleteSubmission}
+                                    onRemove={removeAttachment}
+                                />)}
+                            </ul>}
+                    </section>
 
                     {error && <p className="projects-error" role="alert">{error}</p>}
                     {notice && <p className="projects-notice" role="status">{notice}</p>}
