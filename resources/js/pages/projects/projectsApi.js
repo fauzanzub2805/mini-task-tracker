@@ -153,9 +153,11 @@ export const projectsApi = {
         return request(`/tasks/${taskId}/comments`, { ...options, method: 'POST', body });
     },
 
-    uploadAttachments: (taskId, files, options) => {
+    // kind: 'instruction' (Instructions File) atau 'submission' (Submit File).
+    uploadAttachments: (taskId, files, kind = 'instruction', options) => {
         const form = new FormData();
         Array.from(files).forEach(file => form.append('files[]', file, file.name));
+        form.append('kind', kind);
         return request(`/tasks/${taskId}/attachments`, { ...options, method: 'POST', body: form });
     },
     deleteAttachment: (taskId, attachmentId, options) => request(`/tasks/${taskId}/attachments/${attachmentId}`, { ...options, method: 'DELETE' }),

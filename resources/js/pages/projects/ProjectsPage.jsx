@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, ProjectDetail } from './ProjectDetail.jsx';
 import { TaskDetail } from './TaskDetail.jsx';
+import { MyTaskDetail } from './MyTaskDetail.jsx';
 import { ProjectImageField } from './ProjectImageField.jsx';
 import {
     notifyProjectsChanged,
@@ -201,7 +202,7 @@ function TasksOverview({ projects }) {
             <table className="projects-table">
                 <thead><tr>{['Task', 'Project', 'Assignee', 'Priority', 'Status'].map(label => <th key={label} scope="col">{label}</th>)}</tr></thead>
                 <tbody>{rows.map(task => <tr key={`${task.project.id}-${task.id}`}>
-                    <td><a href={`/projects/${task.project.id}/tasks/${task.id}`}>{task.title}</a></td>
+                    <td><a href={`/projects/${task.project.id}/tasks/${task.id}?view=mytask`}>{task.title}</a></td>
                     <td><a href={`/projects/${task.project.id}`}>{task.project.name}</a></td>
                     <td>{task.assignees?.map(person => person.name).join(', ') || task.assignee?.name || 'Unassigned'}</td>
                     <td><span className={`projects-priority-pill priority-${priorityKey(task.priority)}`}>{priorityLabel(task.priority)}</span></td>
@@ -405,10 +406,13 @@ export function ProjectsPage({ user = null, path }) {
 
     return <div className="projects-page">
         <div className="projects-heading">
-            <h1>{taskId ? (taskTitle ?? 'Task Detail') : projectId ? (project?.name ?? 'Project') : view === 'tasks' ? 'Tasks' : view === 'teams' ? 'Teams' : 'Project'}</h1>
+            <h1>{taskId
+                ? (view === 'mytask' ? `My Tasks → ${taskTitle ?? 'Task'}` : (taskTitle ?? 'Task Detail'))
+                : projectId ? (project?.name ?? 'Project') : view === 'tasks' ? 'Tasks' : view === 'teams' ? 'Teams' : 'Project'}</h1>
         </div>
 
-        <Toolbar
+        {/* Halaman My Tasks (file 2) memakai toolbar pencarian & filternya sendiri. */}
+        {view !== 'mytask' && <Toolbar
             search={search}
             onSearch={setSearch}
             onApplySearch={applySearch}
@@ -418,7 +422,7 @@ export function ProjectsPage({ user = null, path }) {
             onSortOpen={() => setSortOpen(!sortOpen)}
             sort={sort}
             onSort={value => { setSort(value); setSortOpen(false); }}
-        />
+        />}
 
         {listError && <p className="projects-error" role="alert">{listError}</p>}
         {projectError && <p className="projects-error" role="alert">{projectError}</p>}
@@ -443,21 +447,25 @@ export function ProjectsPage({ user = null, path }) {
             navigate={navigate}
             onRefresh={() => window.dispatchEvent(new Event('projects:changed'))}
         />}
-        {projectId && project && taskId && <>
-            <TaskDetail
-                key={taskId}
-                taskId={taskId}
-                project={project}
-                members={members}
-                activities={activities}
-                priorities={priorities}
-                user={user}
-                canManage={manage}
-                navigate={navigate}
-                onRefresh={() => window.dispatchEvent(new Event('projects:changed'))}
-                dirtyRef={dirtyRef}
-            />
-        </>}
+        {projectId && project && taskId && view === 'mytask' && <MyTaskDetail
+            key={`mytask-${taskId}`}
+            taskId={taskId}
+            project={project}
+            navigate={navigate}
+        />}
+        {projectId && project && taskId && view !== 'mytask' && <TaskDetail
+            key={taskId}
+            taskId={taskId}
+            project={project}
+            members={members}
+            activities={activities}
+            priorities={priorities}
+            user={user}
+            canManage={manage}
+            navigate={navigate}
+            onRefresh={() => window.dispatchEvent(new Event('projects:changed'))}
+            dirtyRef={dirtyRef}
+        />}
 
         {creating && <Modal title="Create New Project" onClose={() => setCreating(false)} labelledBy="projects-create-title">
             <CreateProjectForm

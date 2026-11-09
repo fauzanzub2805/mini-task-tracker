@@ -71,7 +71,9 @@ class Task extends Model
 
     public function attachments(): HasMany
     {
-        return $this->hasMany(TaskAttachment::class)->orderBy('id');
+        // Uploader selalu ikut dimuat agar "Nama Pengirim" tersedia pada
+        // daftar Submitted Files tanpa query tambahan per baris.
+        return $this->hasMany(TaskAttachment::class)->with('uploader')->orderBy('id');
     }
 
     public function activities(): HasMany
