@@ -16,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class TaskController extends Controller
@@ -94,7 +95,31 @@ class TaskController extends Controller
             return $task;
         });
 
+        // Foto task disimpan setelah transaksi agar tidak ada file yatim bila
+        // pembuatan task gagal. Mengikuti pola penyimpanan gambar project.
+        if ($request->hasFile('image')) {
+            $task->image_path = $request->file('image')->store("task-images/{$task->id}", 'local');
+            $task->save();
+        }
+
         return (new TaskResource($task->load(self::RELATIONS)))->response()->setStatusCode(201);
+    }
+
+    /** Foto task pada disk privat. Mengikuti kebijakan view yang sama dengan detail task. */
+    public function image(Task $task)
+    {
+        Gate::authorize('view', $task);
+        $disk = Storage::disk('local');
+        abort_unless($task->image_path && $disk->exists($task->image_path), 404);
+        $mime = $disk->mimeType($task->image_path);
+        abort_unless(in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true), 404);
+
+        return response()->file($disk->path($task->image_path), [
+            'Content-Type' => $mime,
+            'X-Content-Type-Options' => 'nosniff',
+            'Content-Security-Policy' => "default-src 'none'",
+            'Cache-Control' => 'private, no-store, max-age=0',
+        ]);
     }
 
     public function show(Task $task): TaskResource

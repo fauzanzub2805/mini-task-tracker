@@ -34,6 +34,8 @@ class StoreTaskRequest extends FormRequest
             // Bawaan 'medium' ditetapkan di controller bila tidak dikirim.
             'priority_id' => ['nullable', 'integer', Rule::exists('priorities', 'id')],
             'due_date' => ['nullable', 'date_format:Y-m-d'],
+            // Foto task opsional, ditambahkan saat membuat task.
+            'image' => ['sometimes', 'required', 'image', 'mimes:jpg,jpeg,png', 'mimetypes:image/jpeg,image/png', 'max:5120'],
             // Assignee wajib anggota project (PRD 4.5).
             'assignee_id' => ['nullable', 'integer', Rule::exists('project_members', 'user_id')->where('project_id', $project->id)],
             'assignee_ids' => ['sometimes', 'array'],

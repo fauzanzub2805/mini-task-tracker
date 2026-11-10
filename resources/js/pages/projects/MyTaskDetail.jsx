@@ -15,12 +15,6 @@ import {
 // sebenarnya ada di halaman Tasks); "Assigned to me" ditandai aktif.
 const FILTER_TABS = ['Assigned to me', 'Created by', 'All Projects', 'Any Priority', 'Any Status', 'Assigned to'];
 
-const RASTER_MIME = /^image\//i;
-
-function isImageAttachment(file) {
-    return RASTER_MIME.test(file?.mime_type || '');
-}
-
 /**
  * Halaman "My Tasks → {judul}". Muncul saat pengguna mengklik salah satu task
  * pada tabel All Tasks. Fokusnya melihat task yang ditugaskan dan mengumpulkan
@@ -67,7 +61,6 @@ export function MyTaskDetail({ taskId, project, navigate }) {
         () => (task?.attachments ?? []).filter(item => (item.kind ?? 'instruction') !== 'submission'),
         [task],
     );
-    const hero = useMemo(() => givenFiles.find(isImageAttachment) ?? null, [givenFiles]);
 
     const projectName = task?.project?.name ?? project?.name ?? '—';
 
@@ -143,9 +136,9 @@ export function MyTaskDetail({ taskId, project, navigate }) {
 
             <div className="mytask-top">
                 <div className="mytask-hero">
-                    {hero
-                        ? <img src={hero.preview_url || hero.url} alt={`Pratinjau ${hero.name}`} loading="lazy" />
-                        : <div className="mytask-hero-empty">Tidak ada gambar</div>}
+                    {task.image_url
+                        ? <img src={task.image_url} alt={`Foto ${task.title}`} loading="lazy" />
+                        : <div className="mytask-hero-empty">Tidak ada foto</div>}
                 </div>
                 <div className="mytask-side">
                     <div className="mytask-field">

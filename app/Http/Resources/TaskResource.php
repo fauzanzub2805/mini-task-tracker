@@ -38,6 +38,11 @@ class TaskResource extends JsonResource
                 'name' => $this->creator->name,
             ] : null),
             'created_by_id' => $this->created_by_id,
+            // Foto task (terpisah dari lampiran). URL privat dengan versi hash
+            // agar cache ikut berganti saat gambar diperbarui.
+            'image_url' => $this->image_path
+                ? route('tasks.image', ['task' => $this->id, 'v' => substr(hash('sha256', $this->image_path), 0, 16)], false)
+                : null,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             // Izin yang dihitung dari Policy (termasuk bypass Admin lewat

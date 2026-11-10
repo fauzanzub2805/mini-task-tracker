@@ -374,9 +374,31 @@ export function CreateTaskForm({ project, members, priorities, canManage = false
     const [form, setForm] = useState({ title: '', description: '', status: 'todo', priority_id: options.find(option => option.name === 'medium')?.id ?? '', due_date: '', assignee_id: '' });
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
+    const [image, setImage] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const [imageError, setImageError] = useState('');
+    const imageInputRef = useRef(null);
+
+    useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
 
     function update(key, value) {
         setForm(current => ({ ...current, [key]: value }));
+    }
+
+    // Foto task: hanya JPEG/PNG, maksimal 5 MB (sama dengan gambar project).
+    function selectImage(files) {
+        const file = files?.[0];
+        if (!file) return;
+        if (!/^image\/(jpeg|png)$/.test(file.type)) { setImageError('Hanya JPEG, JPG, atau PNG.'); return; }
+        if (file.size > 5 * 1024 * 1024) { setImageError('Ukuran foto maksimal 5 MB.'); return; }
+        setImageError('');
+        setImage(file);
+        setPreviewUrl(current => { if (current) URL.revokeObjectURL(current); return URL.createObjectURL(file); });
+    }
+
+    function clearImage() {
+        setImage(null); setImageError('');
+        setPreviewUrl(current => { if (current) URL.revokeObjectURL(current); return null; });
     }
 
     async function submit(event) {
@@ -393,7 +415,16 @@ export function CreateTaskForm({ project, members, priorities, canManage = false
             // Staff tidak berwenang mengatur assignee: field tidak dikirim sama sekali.
             if (canManage) payload.assignee_id = form.assignee_id ? Number(form.assignee_id) : null;
             if (form.priority_id) payload.priority_id = Number(form.priority_id);
-            const created = await projectsApi.createTask(project.id, payload);
+            // Bila ada foto, kirim sebagai multipart; tanpa foto tetap JSON.
+            let body = payload;
+            if (image) {
+                body = new FormData();
+                Object.entries(payload).forEach(([key, value]) => {
+                    if (value !== null && value !== undefined) body.append(key, value);
+                });
+                body.append('image', image);
+            }
+            const created = await projectsApi.createTask(project.id, body);
             const task = created?.data ?? created;
             notifyProjectsChanged();
             onRefresh?.();
@@ -440,6 +471,30 @@ export function CreateTaskForm({ project, members, priorities, canManage = false
             <span className="projects-field-label">Due Date</span>
             <div className="projects-field-body projects-calendar-body">
                 <CalendarPicker value={form.due_date} onChange={value => update('due_date', value)} id="projects-task-calendar" />
+            </div>
+        </div>
+        <div className="projects-field projects-image-card">
+            <label className="projects-field-label" htmlFor="projects-task-image">Task Photo</label>
+            <div className="projects-field-body projects-image-editor">
+                <input ref={imageInputRef} id="projects-task-image" className="projects-image-input" type="file"
+                    accept="image/jpeg,image/png,.jpg,.jpeg,.png" disabled={busy}
+                    onChange={event => { selectImage(event.target.files); event.target.value = ''; }}
+                    aria-describedby="projects-task-image-help" />
+                <button type="button" className="projects-image-dropzone" disabled={busy}
+                    aria-label={previewUrl ? 'Replace Task Photo' : 'Choose Task Photo'}
+                    onClick={() => imageInputRef.current?.click()}>
+                    {previewUrl
+                        ? <img className="projects-image-preview" src={previewUrl} alt="Task photo preview" />
+                        : <svg className="projects-image-icon" viewBox="0 0 80 80" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
+                            <rect x="8" y="8" width="64" height="64" rx="8" />
+                            <circle cx="27" cy="27" r="6" />
+                            <path d="M9 57 30 38l15 14 10-10 17 17" />
+                        </svg>}
+                    <span className="projects-image-prompt">{previewUrl ? 'Click to replace photo' : 'Add a task photo'}</span>
+                    <span id="projects-task-image-help" className="projects-image-help">Max 5 MB, only JPEG, JPG, PNG accepted</span>
+                </button>
+                {image && <button type="button" className="projects-secondary" disabled={busy} onClick={clearImage}>Remove Photo</button>}
+                {imageError && <p className="projects-error" role="alert">{imageError}</p>}
             </div>
         </div>
         {error && <p className="projects-error" role="alert">{error}</p>}

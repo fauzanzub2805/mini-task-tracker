@@ -11,22 +11,22 @@ function makeFile(name, size, type = 'application/pdf') {
     return file;
 }
 
-function task(attachments) {
+function task(attachments, imageUrl = null) {
     return {
         id: 21, project_id: 2, title: 'Final Recap Reimburse',
         description: 'Menyusun rekapan reimburse proyek', status: 'in_progress',
         priority: { id: 3, name: 'high' }, due_date: '2026-09-18',
-        project: { id: 2, name: 'Ai for PT.Bukaka' }, attachments,
+        project: { id: 2, name: 'Ai for PT.Bukaka' }, attachments, image_url: imageUrl,
         can: { update: true, delete: false },
     };
 }
 
-function stub(attachments) {
+function stub(attachments, imageUrl = null) {
     const state = { posted: null };
     const fetchMock = vi.fn((url, options = {}) => {
         const method = (options.method ?? 'GET').toUpperCase();
         if (String(url) === '/tasks/21' && method === 'GET') {
-            return Promise.resolve({ ok: true, status: 200, json: async () => ({ data: task(attachments) }) });
+            return Promise.resolve({ ok: true, status: 200, json: async () => ({ data: task(attachments, imageUrl) }) });
         }
         if (String(url) === '/tasks/21/attachments' && method === 'POST') {
             const form = options.body;
@@ -39,17 +39,26 @@ function stub(attachments) {
     return state;
 }
 
-it('renders the task, its project and the Given Files from instruction attachments', async () => {
+it('renders the task photo from image_url, separate from the Given Files list', async () => {
     stub([
         { id: 5, kind: 'instruction', name: 'panduan.pdf', size: 1024, mime_type: 'application/pdf', url: '/tasks/21/attachments/5', preview_url: '/tasks/21/attachments/5/preview', uploaded_by: { id: 1, name: 'Manager' } },
-    ]);
+    ], '/tasks/21/image?v=abc123');
     render(<MyTaskDetail taskId={21} project={{ id: 2, name: 'Ai for PT.Bukaka' }} navigate={vi.fn()} />);
 
     expect(await screen.findByRole('heading', { name: 'Final Recap Reimburse' })).toBeInTheDocument();
     expect(screen.getByText('Ai for PT.Bukaka')).toBeInTheDocument();
+    // Foto task berasal dari image_url, bukan dari Given Files.
+    expect(screen.getByRole('img', { name: /Foto Final Recap Reimburse/ })).toHaveAttribute('src', '/tasks/21/image?v=abc123');
     expect(screen.getByRole('heading', { name: 'Given Files' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'panduan.pdf' })).toHaveAttribute('href', '/tasks/21/attachments/5');
     expect(screen.getByRole('heading', { name: 'Submit File' })).toBeInTheDocument();
+});
+
+it('shows a placeholder when the task has no photo', async () => {
+    stub([]);
+    render(<MyTaskDetail taskId={21} project={{ id: 2, name: 'Ai for PT.Bukaka' }} navigate={vi.fn()} />);
+    expect(await screen.findByText('Tidak ada foto')).toBeInTheDocument();
+    expect(screen.queryByRole('img')).toBeNull();
 });
 
 it('shows "No file attached" when the task has no instruction files', async () => {

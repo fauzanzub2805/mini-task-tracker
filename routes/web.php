@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/projects/{project}/tasks', [TaskController::class, 'store']);
     Route::get('/projects/{project}/tasks/{task}', [TaskController::class, 'page'])->name('tasks.page');
     Route::get('/tasks/{task}', [TaskController::class, 'show']);
+    Route::get('/tasks/{task}/image', [TaskController::class, 'image'])->name('tasks.image');
     Route::patch('/tasks/{task}', [TaskController::class, 'update']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
 

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['project_id', 'title', 'description', 'status', 'priority_id', 'due_date', 'assignee_id', 'created_by_id'])]
+#[Fillable(['project_id', 'title', 'description', 'status', 'priority_id', 'due_date', 'image_path', 'assignee_id', 'created_by_id'])]
 class Task extends Model
 {
     public const STATUS_TODO = 'todo';
