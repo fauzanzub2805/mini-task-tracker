@@ -123,6 +123,8 @@ it('searches project managers before filtering tasks by creator', async () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Created by/ }));
     const dialog = screen.getByRole('dialog', { name: 'Created by' });
+    // Opsi default mengikuti pola "All Projects": label tombolnya sendiri.
+    expect(within(dialog).getByRole('option', { name: /Created by/ })).toHaveAttribute('aria-selected', 'true');
     // Sebelum mengetik, seluruh project manager tampil dan staff tidak ikut.
     expect(within(dialog).getByRole('option', { name: 'Fulan bin Fulan' })).toBeInTheDocument();
     expect(within(dialog).getByRole('option', { name: 'Rina Wulandari' })).toBeInTheDocument();
@@ -136,6 +138,11 @@ it('searches project managers before filtering tasks by creator', async () => {
 
     expect(screen.getByRole('button', { name: /Rina Wulandari/ })).toBeInTheDocument();
     expect(rows()).toEqual(['Desain UI']);
+
+    // Kembali ke default tanpa filter lewat opsi "Created by".
+    fireEvent.click(screen.getByRole('button', { name: /Rina Wulandari/ }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: /Rina Wulandari/ })).getByRole('option', { name: /Created by/ }));
+    expect(rows()).toEqual(['Fiksasi Tim', 'Memorandum', 'Desain UI']);
 });
 
 it('filters tasks by selected project', async () => {
@@ -175,11 +182,17 @@ it('lists every task of the selected assignee across projects', async () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Assigned to' }));
     const dialog = screen.getByRole('dialog', { name: 'Assigned to' });
+    expect(within(dialog).getByRole('option', { name: /Assigned to/ })).toHaveAttribute('aria-selected', 'true');
     fireEvent.change(within(dialog).getByLabelText('Search assignee'), { target: { value: 'eka' } });
     fireEvent.click(within(dialog).getByRole('option', { name: 'Eka Prasetyo' }));
 
     expect(rows()).toEqual(['Desain UI']);
     expect(screen.getByRole('button', { name: /Eka Prasetyo/ })).toBeInTheDocument();
+
+    // Opsi default mengembalikan seluruh task lintas project.
+    fireEvent.click(screen.getByRole('button', { name: /Eka Prasetyo/ }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: /Eka Prasetyo/ })).getByRole('option', { name: /Assigned to/ }));
+    expect(rows()).toEqual(['Fiksasi Tim', 'Memorandum', 'Desain UI']);
 });
 
 it('keeps the search term from the URL applied to the task list', async () => {

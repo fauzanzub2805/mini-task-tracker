@@ -75,7 +75,7 @@ function OptionList({ options, value, emptyLabel, onSelect }) {
 }
 
 /** Dropdown dengan kolom pencarian: menampilkan semua nama sebelum ada input. */
-function PeopleMenu({ label, placeholder, options, value, onSelect }) {
+function PeopleMenu({ label, placeholder, options, value, emptyLabel, onSelect }) {
     const [term, setTerm] = useState('');
     const needle = term.trim().toLowerCase();
     const rows = needle ? options.filter(person => person.name.toLowerCase().includes(needle)) : options;
@@ -90,15 +90,20 @@ function PeopleMenu({ label, placeholder, options, value, onSelect }) {
             onChange={event => setTerm(event.target.value)}
             autoFocus
         />
-        {rows.length === 0
-            ? <p className="task-filter-empty">Nama tidak ditemukan.</p>
-            : <ul className="task-filter-options" role="listbox" aria-label={label}>
-                {rows.map(person => <li key={person.id}>
-                    <button type="button" role="option" aria-selected={value === person.id} onClick={() => onSelect(person.id)}>
-                        {person.name}{value === person.id && <span aria-hidden="true">✓</span>}
-                    </button>
-                </li>)}
-            </ul>}
+        <ul className="task-filter-options" role="listbox" aria-label={label}>
+            {/* Opsi default: tampilkan semua tanpa filter, seperti "All Projects". */}
+            <li>
+                <button type="button" role="option" aria-selected={value === null} onClick={() => onSelect(null)}>
+                    {emptyLabel}{value === null && <span aria-hidden="true">✓</span>}
+                </button>
+            </li>
+            {rows.map(person => <li key={person.id}>
+                <button type="button" role="option" aria-selected={value === person.id} onClick={() => onSelect(person.id)}>
+                    {person.name}{value === person.id && <span aria-hidden="true">✓</span>}
+                </button>
+            </li>)}
+        </ul>
+        {rows.length === 0 && <p className="task-filter-empty">Nama tidak ditemukan.</p>}
     </>;
 }
 
@@ -158,6 +163,7 @@ export function TaskFilters({ filters, onChange, projects = [], priorities = [],
                 placeholder="Search project manager"
                 options={managers}
                 value={filters.createdBy}
+                emptyLabel="Created by"
                 onSelect={value => set('createdBy', value)}
             />
         </FilterMenu>
@@ -184,6 +190,7 @@ export function TaskFilters({ filters, onChange, projects = [], priorities = [],
                 placeholder="Search assignee"
                 options={users}
                 value={filters.assignee}
+                emptyLabel="Assigned to"
                 onSelect={value => set('assignee', value)}
             />
         </FilterMenu>
