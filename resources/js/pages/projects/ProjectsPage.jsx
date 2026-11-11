@@ -465,7 +465,7 @@ export function ProjectsPage({ user = null, path }) {
             onSearch={setSearch}
             onApplySearch={applySearch}
             onCreate={() => setCreating(true)}
-            canCreate={canCreateProject(user)}
+            canCreate={canCreateProject(user) && view !== 'teams'}
             sortOpen={sortOpen}
             onSortOpen={() => setSortOpen(!sortOpen)}
             sort={sort}

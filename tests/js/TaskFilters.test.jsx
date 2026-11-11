@@ -203,6 +203,20 @@ it('keeps the search term from the URL applied to the task list', async () => {
     await waitFor(() => expect(rows()).toEqual(['Memorandum']));
 });
 
+it('hides Create New Project on the Teams page but keeps it on the project list', async () => {
+    setup();
+    const manager = { id: 1, name: 'Fulan bin Fulan', roles: ['manager'] };
+    const { unmount } = render(<ProjectsPage user={manager} path="/projects?view=teams" />);
+
+    await screen.findByRole('heading', { name: 'Teams', level: 1 });
+    expect(screen.queryByRole('button', { name: 'Create New Project' })).toBeNull();
+    unmount();
+
+    render(<ProjectsPage user={manager} path="/projects" />);
+    await screen.findByRole('heading', { name: 'Project', level: 1 });
+    expect(await screen.findByRole('button', { name: 'Create New Project' })).toBeInTheDocument();
+});
+
 it('no longer renders the filter bar on the My Tasks detail page', async () => {
     setup();
     render(<ProjectsPage user={staff} path="/projects/1/tasks/11?view=mytask" />);
