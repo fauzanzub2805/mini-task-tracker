@@ -3,6 +3,7 @@ import { Modal, ProjectDetail } from './ProjectDetail.jsx';
 import { TaskDetail } from './TaskDetail.jsx';
 import { MyTaskDetail } from './MyTaskDetail.jsx';
 import { ProjectImageField } from './ProjectImageField.jsx';
+import { DEFAULT_TASK_FILTERS, filterTasks, TaskFilters } from './TaskFilters.jsx';
 import {
     notifyProjectsChanged,
     priorityLabel,
@@ -176,10 +177,11 @@ function CreateProjectForm({ onClose, onCreated }) {
     </form>;
 }
 
-function TasksOverview({ projects }) {
+function TasksOverview({ projects, priorities, users, user, query, navigate }) {
     const [rows, setRows] = useState([]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
+    const [filters, setFilters] = useState(DEFAULT_TASK_FILTERS);
 
     useEffect(() => {
         let alive = true;
@@ -193,24 +195,42 @@ function TasksOverview({ projects }) {
         return () => { alive = false; controller.abort(); };
     }, [projects]);
 
-    return <div className="projects-table-card">
-        <h2>All Tasks</h2>
-        {loading && <p role="status">Memuat task…</p>}
-        {error && <p className="projects-error" role="alert">{error}</p>}
-        {!loading && rows.length === 0 && <p className="projects-empty">Belum ada task.</p>}
-        {rows.length > 0 && <div className="projects-table-scroll">
-            <table className="projects-table">
-                <thead><tr>{['Task', 'Project', 'Assignee', 'Priority', 'Status'].map(label => <th key={label} scope="col">{label}</th>)}</tr></thead>
-                <tbody>{rows.map(task => <tr key={`${task.project.id}-${task.id}`}>
-                    <td><a href={`/projects/${task.project.id}/tasks/${task.id}?view=mytask`}>{task.title}</a></td>
-                    <td><a href={`/projects/${task.project.id}`}>{task.project.name}</a></td>
-                    <td>{task.assignees?.map(person => person.name).join(', ') || task.assignee?.name || 'Unassigned'}</td>
-                    <td><span className={`projects-priority-pill priority-${priorityKey(task.priority)}`}>{priorityLabel(task.priority)}</span></td>
-                    <td><span className={`projects-status-badge status-${statusClass(task.status)}`}>{statusLabel(task.status)}</span></td>
-                </tr>)}</tbody>
-            </table>
-        </div>}
-    </div>;
+    const visibleRows = useMemo(
+        () => filterTasks(rows, filters, user?.id ?? null, query),
+        [rows, filters, user, query],
+    );
+
+    const filtered = Object.entries(filters).some(([key, value]) => (key === 'mine' ? value === true : value !== null));
+
+    return <>
+        <TaskFilters
+            filters={filters}
+            onChange={setFilters}
+            projects={projects}
+            priorities={priorities}
+            users={users}
+        />
+        <div className="projects-table-card">
+            <h2>All Tasks</h2>
+            {loading && <p role="status">Memuat task…</p>}
+            {error && <p className="projects-error" role="alert">{error}</p>}
+            {!loading && visibleRows.length === 0 && <p className="projects-empty">
+                {filtered || query ? 'Tidak ada task yang cocok dengan filter.' : 'Belum ada task.'}
+            </p>}
+            {visibleRows.length > 0 && <div className="projects-table-scroll">
+                <table className="projects-table">
+                    <thead><tr>{['Task', 'Project', 'Assignee', 'Priority', 'Status'].map(label => <th key={label} scope="col">{label}</th>)}</tr></thead>
+                    <tbody>{visibleRows.map(task => <tr key={`${task.project.id}-${task.id}`}>
+                        <td><a href={`/projects/${task.project.id}/tasks/${task.id}?view=mytask`}>{task.title}</a></td>
+                        <td><a href={`/projects/${task.project.id}`}>{task.project.name}</a></td>
+                        <td>{task.assignees?.map(person => person.name).join(', ') || task.assignee?.name || 'Unassigned'}</td>
+                        <td><span className={`projects-priority-pill priority-${priorityKey(task.priority)}`}>{priorityLabel(task.priority)}</span></td>
+                        <td><span className={`projects-status-badge status-${statusClass(task.status)}`}>{statusLabel(task.status)}</span></td>
+                    </tr>)}</tbody>
+                </table>
+            </div>}
+        </div>
+    </>;
 }
 
 function TeamsOverview({ projects }) {
@@ -255,6 +275,7 @@ export function ProjectsPage({ user = null, path }) {
 
     const [projects, setProjects] = useState([]);
     const [priorities, setPriorities] = useState([]);
+    const [users, setUsers] = useState([]);
     const [search, setSearch] = useState(route.query);
     const [sort, setSort] = useState('newest');
     const [sortOpen, setSortOpen] = useState(false);
@@ -294,6 +315,15 @@ export function ProjectsPage({ user = null, path }) {
         projectsApi.priorities()
             .then(response => { if (alive) setPriorities(response?.data ?? response ?? []); })
             .catch(() => { if (alive) setPriorities([]); });
+        return () => { alive = false; };
+    }, []);
+
+    // Daftar anggota tim dipakai filter "Created by" dan "Assigned to".
+    useEffect(() => {
+        let alive = true;
+        projectsApi.users()
+            .then(rows => { if (alive) setUsers(rows); })
+            .catch(() => { if (alive) setUsers([]); });
         return () => { alive = false; };
     }, []);
 
@@ -393,12 +423,17 @@ export function ProjectsPage({ user = null, path }) {
         if (projectId && route.query) setSearch(route.query);
     }, [projectId, route.query]);
 
+    // URL adalah sumber kebenaran pencarian, termasuk saat dipanggil ulang.
+    useEffect(() => { setSearch(route.query); }, [route.query]);
+
     function applySearch() {
         if (projectId) {
             navigate(`/projects?q=${encodeURIComponent(search)}`);
             return;
         }
-        navigate(search ? `/projects?q=${encodeURIComponent(search)}` : '/projects');
+        const base = view === 'tasks' ? '/projects?view=tasks' : '/projects';
+        const term = search ? `${base}${view === 'tasks' ? '&' : '?'}q=${encodeURIComponent(search)}` : base;
+        navigate(term);
     }
 
     const taskTitle = tasks.find(task => task.id === taskId)?.title;
@@ -408,11 +443,24 @@ export function ProjectsPage({ user = null, path }) {
         <div className="projects-heading">
             <h1>{taskId
                 ? (view === 'mytask' ? `My Tasks → ${taskTitle ?? 'Task'}` : (taskTitle ?? 'Task Detail'))
-                : projectId ? (project?.name ?? 'Project') : view === 'tasks' ? 'Tasks' : view === 'teams' ? 'Teams' : 'Project'}</h1>
+                : projectId ? (project?.name ?? 'Project') : view === 'tasks' ? 'My Tasks' : view === 'teams' ? 'Teams' : 'Project'}</h1>
         </div>
 
-        {/* Halaman My Tasks (file 2) memakai toolbar pencarian & filternya sendiri. */}
-        {view !== 'mytask' && <Toolbar
+        {/* Halaman My Tasks: pencarian task di atas filter bar (urutan Figma). */}
+        {view === 'tasks' && !projectId && <div className="projects-toolbar">
+            <form className="projects-search" role="search" onSubmit={event => { event.preventDefault(); applySearch(); }}>
+                <input
+                    type="search"
+                    aria-label="Find a task"
+                    placeholder="Find a task.."
+                    value={search}
+                    onChange={event => setSearch(event.target.value)}
+                />
+                <button type="submit" className="projects-search-button" aria-label="Cari task">⌕</button>
+            </form>
+        </div>}
+
+        {view !== 'mytask' && view !== 'tasks' && <Toolbar
             search={search}
             onSearch={setSearch}
             onApplySearch={applySearch}
@@ -432,7 +480,14 @@ export function ProjectsPage({ user = null, path }) {
             {route.query && <p className="projects-search-note">Hasil pencarian untuk “{route.query}”.</p>}
             <ProjectCards projects={visibleProjects} navigate={navigate} />
         </>}
-        {!projectId && view === 'tasks' && <TasksOverview projects={projects} />}
+        {!projectId && view === 'tasks' && <TasksOverview
+            projects={projects}
+            priorities={priorities}
+            users={users}
+            user={user}
+            query={route.query}
+            navigate={navigate}
+        />}
         {!projectId && view === 'teams' && <TeamsOverview projects={projects} />}
 
         {projectId && loadingProject && !project && <p className="projects-empty" role="status">Memuat detail project…</p>}

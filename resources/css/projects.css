@@ -381,7 +381,23 @@
 .mytask-given-list a:hover { text-decoration: underline; }
 .mytask-submit { padding: 18px; border-radius: 12px; background: #e2e8f0; }
 .mytask-actions { display: flex; justify-content: center; gap: 16px; margin-top: 22px; }
+/* Filter bar My Tasks (Figma Task Page_11 Nov): bar merah dengan tombol pil. */
+.task-filters { gap: 6px; padding: 8px 12px; margin-bottom: 20px; }
+.task-filter { position: relative; }
+.task-filter > .task-filter-button, .task-filters > .task-filter-button { padding: 10px 20px; }
+.task-filter-chevron { font-size: 17px; line-height: 1; }
+.task-filter-menu { position: absolute; z-index: 25; top: calc(100% + 10px); left: 0; width: max-content; min-width: 260px; max-width: min(340px, 80vw); padding: 10px; background: #fff; border: 1px solid #dce3ee; border-radius: 12px; box-shadow: 0 16px 36px #17223726; }
+.task-filter-menu .task-filter-search { width: 100%; padding: 10px 12px; border: 1px solid #dce3ee; border-radius: 8px; background: #eff4fc; font-size: 14px; color: #172237; }
+.task-filter-menu .task-filter-search:focus-visible { outline: 2px solid #f13d31; outline-offset: 1px; }
+.task-filter-menu .task-filter-options { max-height: 260px; margin: 6px 0 0; padding: 0; overflow-y: auto; list-style: none; display: grid; gap: 2px; }
+/* Mengalahkan aturan pil bar di atas agar opsi menu tidak ikut putih. */
+.mytask-filters .task-filter-menu .task-filter-options button { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 9px 12px; border-radius: 6px; background: transparent; color: #172237; font-size: 14px; font-weight: 500; text-align: left; white-space: normal; }
+.mytask-filters .task-filter-menu .task-filter-options button:hover { background: #eff4fc; }
+.mytask-filters .task-filter-menu .task-filter-options button[aria-selected="true"] { background: #eff4fc; color: #f13d31; font-weight: 600; }
+.task-filter-empty { margin: 8px 0 2px; font-size: 13px; color: #61748d; }
+
 @media (max-width: 720px) {
+    .task-filter-menu { left: auto; right: 0; max-width: min(320px, 88vw); }
     .mytask-top, .mytask-grid { grid-template-columns: minmax(0, 1fr); }
 }
 .mytask-pill-date { background: #fff; font-weight: 700; }

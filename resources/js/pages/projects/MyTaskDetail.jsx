@@ -11,9 +11,8 @@ import {
     statusLabel,
 } from './projectsApi.js';
 
-// Tab filter mengikuti desain Figma. Untuk saat ini hanya tampilan (penyaringan
-// sebenarnya ada di halaman Tasks); "Assigned to me" ditandai aktif.
-const FILTER_TABS = ['Assigned to me', 'Created by', 'All Projects', 'Any Priority', 'Any Status', 'Assigned to'];
+// Halaman "My Tasks" (daftar) memiliki filter bar sendiri di ProjectsPage.
+// Tab filter di sini sengaja tidak ditampilkan lagi karena sudah dipindahkan.
 
 /**
  * Halaman "My Tasks → {judul}". Muncul saat pengguna mengklik salah satu task
@@ -117,16 +116,6 @@ export function MyTaskDetail({ taskId, project, navigate }) {
                 />
                 <button type="submit" aria-label="Cari task">⌕</button>
             </form>
-            <div className="mytask-filters" role="group" aria-label="Filter task">
-                {FILTER_TABS.map((label, index) => <button
-                    key={label}
-                    type="button"
-                    className={index === 0 ? 'is-active' : undefined}
-                    aria-pressed={index === 0}
-                    title="Penyaringan tersedia di halaman Tasks"
-                    onClick={() => navigate('/projects?view=tasks')}
-                >{label}{index > 0 && index < 5 ? ' ›' : ''}</button>)}
-            </div>
         </div>
 
         {loading && !task && <p className="projects-empty" role="status">Memuat task…</p>}
