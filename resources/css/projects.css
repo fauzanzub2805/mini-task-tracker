@@ -104,19 +104,23 @@
 .projects-form-actions { display: flex; gap: 18px; margin-top: 6px; }
 .projects-form-actions-center { justify-content: center; }
 
-/* Project settings: image editor and aligned member controls. */
-.projects-image-card { overflow: hidden; border-radius: 26px; }
-.projects-image-card > .projects-field-label { padding: 16px 26px; background: #d9d9d9; border-radius: 26px 26px 0 0; font-size: 20px; }
-.projects-image-card > .projects-image-editor { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-width: 0; padding: 18px; background: #e2e8f0; border-radius: 0 0 26px 26px; }
+/* Editor gambar: mengikuti bentuk kolom field lain (label 8px, body 10px). */
+.projects-image-card { overflow: hidden; border-radius: 8px 8px 10px 10px; }
+.projects-image-card > .projects-field-label { padding: 10px 22px; background: #d9dde3; border-radius: 8px 8px 0 0; font-size: 17px; }
+.projects-image-card > .projects-image-editor { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-width: 0; padding: 8px 14px; background: #e8eff5; border-radius: 0 0 10px 10px; }
+/* Halaman Task Detail memakai bahasa desain radius besar; editor gambar ikut menyesuaikan di sana. */
+.projects-task-detail .projects-image-card { border-radius: 26px; }
+.projects-task-detail .projects-image-card > .projects-field-label { padding: 16px 26px; background: #d9d9d9; border-radius: 26px 26px 0 0; font-size: 20px; }
+.projects-task-detail .projects-image-card > .projects-image-editor { padding: 18px; background: #e2e8f0; border-radius: 0 0 26px 26px; }
 .projects-image-editor .projects-image-input { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.projects-image-dropzone { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; width: 100%; min-height: clamp(240px, 30vw, 380px); padding: 24px 12px; border: 2px solid transparent; border-radius: 16px; background: transparent; color: #64748b; cursor: pointer; text-align: center; }
+.projects-image-dropzone { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; width: 100%; min-height: clamp(240px, 30vw, 380px); padding: 24px 12px; border: 2px solid transparent; border-radius: 6px; background: transparent; color: #64748b; cursor: pointer; text-align: center; }
 .projects-image-dropzone:hover:not(:disabled), .projects-image-dropzone.is-dragging { background: #d6e0ed; border-color: #94a3b8; }
 .projects-image-dropzone:focus-visible, .projects-image-input:focus-visible + .projects-image-dropzone { outline: 3px solid #2563eb; outline-offset: -3px; }
 .projects-image-dropzone:disabled { cursor: wait; opacity: .65; }
 .projects-image-icon { width: clamp(64px, 8vw, 100px); height: auto; pointer-events: none; }
 .projects-image-prompt { font-size: clamp(18px, 2.2vw, 25px); font-weight: 500; }
 .projects-image-help { font-size: clamp(12px, 1.5vw, 16px); }
-.projects-image-preview { display: block; width: 100%; max-height: 280px; object-fit: contain; border-radius: 12px; }
+.projects-image-preview { display: block; width: 100%; max-height: 280px; object-fit: contain; border-radius: 4px; }
 .projects-image-editor p { flex-basis: 100%; margin: 0; font-size: 13px; }
 .projects-image-save-note { color: #64748b; }
 .projects-setting-members { margin-top: 28px; }
