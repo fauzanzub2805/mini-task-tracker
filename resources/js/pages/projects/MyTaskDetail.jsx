@@ -10,9 +10,10 @@ import {
     statusClass,
     statusLabel,
 } from './projectsApi.js';
+import { DEFAULT_TASK_FILTERS, filtersToQuery, TaskFilters } from './TaskFilters.jsx';
 
-// Halaman "My Tasks" (daftar) memiliki filter bar sendiri di ProjectsPage.
-// Tab filter di sini sengaja tidak ditampilkan lagi karena sudah dipindahkan.
+// Halaman "My Tasks → {judul}". Filter bar ditampilkan seperti Figma; memilih
+// filter mengarah ke daftar My Tasks dengan filter tersebut aktif (query string).
 
 /**
  * Halaman "My Tasks → {judul}". Muncul saat pengguna mengklik salah satu task
@@ -20,7 +21,7 @@ import {
  * berkas: "Given Files" berasal dari Instructions File project, dan "Submit File"
  * menambah Submitted Files yang terlihat di halaman detail task project.
  */
-export function MyTaskDetail({ taskId, project, navigate }) {
+export function MyTaskDetail({ taskId, project, projects = [], users = [], priorities = [], navigate }) {
     const [task, setTask] = useState(null);
     const [pending, setPending] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -29,6 +30,7 @@ export function MyTaskDetail({ taskId, project, navigate }) {
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
     const [search, setSearch] = useState('');
+    const [filters, setFilters] = useState(DEFAULT_TASK_FILTERS);
 
     const load = useCallback(async signal => {
         try {
@@ -104,6 +106,14 @@ export function MyTaskDetail({ taskId, project, navigate }) {
         navigate(term ? `/projects?view=tasks&q=${encodeURIComponent(term)}` : '/projects?view=tasks');
     }
 
+    // Detail task menampilkan satu task, jadi filter bar di sini mengantar ke
+    // daftar My Tasks dengan filter yang dipilih.
+    function changeFilters(next) {
+        setFilters(next);
+        const query = filtersToQuery(next);
+        navigate(`/projects?view=tasks${query ? `&${query}` : ''}`);
+    }
+
     return <div className="mytask-page">
         <div className="mytask-toolbar">
             <form className="mytask-search" role="search" onSubmit={onSearch}>
@@ -118,6 +128,14 @@ export function MyTaskDetail({ taskId, project, navigate }) {
             </form>
         </div>
 
+        <TaskFilters
+            filters={filters}
+            onChange={changeFilters}
+            projects={projects.length ? projects : (project ? [project] : [])}
+            priorities={priorities}
+            users={users}
+        />
+
         {loading && !task && <p className="projects-empty" role="status">Memuat task…</p>}
 
         {task && <div className="mytask-card">
@@ -127,12 +145,14 @@ export function MyTaskDetail({ taskId, project, navigate }) {
                 <div className="mytask-hero">
                     {task.image_url
                         ? <img src={task.image_url} alt={`Foto ${task.title}`} loading="lazy" />
-                        : <div className="mytask-hero-empty">Tidak ada foto</div>}
+                        : <div className="mytask-hero-empty">Tidak ada foto task</div>}
                 </div>
                 <div className="mytask-side">
                     <div className="mytask-field">
                         <span>Project</span>
-                        <span className="mytask-pill mytask-pill-plain">{projectName}</span>
+                        <span className="mytask-pill">
+                            <span className="mytask-pill-inner mytask-pill-project">{projectName}</span>
+                        </span>
                     </div>
                     <div className="mytask-field">
                         <span>Priority</span>
@@ -167,7 +187,9 @@ export function MyTaskDetail({ taskId, project, navigate }) {
                 <section className="mytask-side">
                     <div className="mytask-field">
                         <span>Due Date</span>
-                        <span className="mytask-pill mytask-pill-date">{task.due_date ? formatDay(task.due_date) : 'Belum diatur'}</span>
+                        <span className="mytask-pill">
+                            <span className="mytask-pill-inner mytask-pill-white mytask-pill-date">{task.due_date ? formatDay(task.due_date) : 'Belum diatur'}</span>
+                        </span>
                     </div>
                     <div className="mytask-field">
                         <span>Status</span>
@@ -200,14 +222,14 @@ export function MyTaskDetail({ taskId, project, navigate }) {
                             </li>)}
                         </ul>}
                     </div>
-                </div>
 
-                {error && <p className="projects-error" role="alert">{error}</p>}
-                {notice && <p className="projects-notice" role="status">{notice}</p>}
+                    {error && <p className="projects-error" role="alert">{error}</p>}
+                    {notice && <p className="projects-notice" role="status">{notice}</p>}
 
-                <div className="mytask-actions">
-                    <button type="submit" className="projects-primary" disabled={submitting}>Save Submitted Files</button>
-                    <button type="button" className="projects-secondary" disabled={submitting} onClick={cancel}>Cancel</button>
+                    <div className="mytask-actions">
+                        <button type="submit" className="projects-primary" disabled={submitting}>Save Submitted Files</button>
+                        <button type="button" className="projects-secondary" disabled={submitting} onClick={cancel}>Cancel</button>
+                    </div>
                 </div>
             </form>
         </div>}

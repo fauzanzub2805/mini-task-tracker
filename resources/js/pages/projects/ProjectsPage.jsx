@@ -3,7 +3,7 @@ import { Modal, ProjectDetail } from './ProjectDetail.jsx';
 import { TaskDetail } from './TaskDetail.jsx';
 import { MyTaskDetail } from './MyTaskDetail.jsx';
 import { ProjectImageField } from './ProjectImageField.jsx';
-import { DEFAULT_TASK_FILTERS, filterTasks, TaskFilters } from './TaskFilters.jsx';
+import { DEFAULT_TASK_FILTERS, filterTasks, filtersFromQuery, TaskFilters } from './TaskFilters.jsx';
 import {
     notifyProjectsChanged,
     priorityLabel,
@@ -177,11 +177,11 @@ function CreateProjectForm({ onClose, onCreated }) {
     </form>;
 }
 
-function TasksOverview({ projects, priorities, users, user, query, navigate }) {
+function TasksOverview({ projects, priorities, users, user, query, params, navigate }) {
     const [rows, setRows] = useState([]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
-    const [filters, setFilters] = useState(DEFAULT_TASK_FILTERS);
+    const [filters, setFilters] = useState(() => filtersFromQuery(params));
 
     useEffect(() => {
         let alive = true;
@@ -486,6 +486,7 @@ export function ProjectsPage({ user = null, path }) {
             users={users}
             user={user}
             query={route.query}
+            params={route.params}
             navigate={navigate}
         />}
         {!projectId && view === 'teams' && <TeamsOverview projects={projects} />}
@@ -506,6 +507,9 @@ export function ProjectsPage({ user = null, path }) {
             key={`mytask-${taskId}`}
             taskId={taskId}
             project={project}
+            projects={projects}
+            users={users}
+            priorities={priorities}
             navigate={navigate}
         />}
         {projectId && project && taskId && view !== 'mytask' && <TaskDetail

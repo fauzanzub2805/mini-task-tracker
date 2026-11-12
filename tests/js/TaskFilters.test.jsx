@@ -217,12 +217,16 @@ it('hides Create New Project on the Teams page but keeps it on the project list'
     expect(await screen.findByRole('button', { name: 'Create New Project' })).toBeInTheDocument();
 });
 
-it('no longer renders the filter bar on the My Tasks detail page', async () => {
+it('shows the filter bar on the My Tasks detail page and opens the filtered list', async () => {
     setup();
     render(<ProjectsPage user={staff} path="/projects/1/tasks/11?view=mytask" />);
 
     await screen.findByRole('heading', { name: 'My Tasks → Fiksasi Tim', level: 1 });
     await screen.findByRole('heading', { name: 'Fiksasi Tim', level: 2 });
-    expect(screen.queryByRole('group', { name: 'Filter task' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Assigned to me' })).toBeNull();
+    expect(screen.getByRole('group', { name: 'Filter task' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Assigned to me' }));
+
+    await screen.findByRole('heading', { name: 'My Tasks', level: 1 });
+    await waitFor(() => expect(rows()).toEqual(['Fiksasi Tim']));
 });

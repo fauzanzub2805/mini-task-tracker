@@ -57,8 +57,21 @@ it('renders the task photo from image_url, separate from the Given Files list', 
 it('shows a placeholder when the task has no photo', async () => {
     stub([]);
     render(<MyTaskDetail taskId={21} project={{ id: 2, name: 'Ai for PT.Bukaka' }} navigate={vi.fn()} />);
-    expect(await screen.findByText('Tidak ada foto')).toBeInTheDocument();
+    expect(await screen.findByText('Tidak ada foto task')).toBeInTheDocument();
     expect(screen.queryByRole('img')).toBeNull();
+});
+
+it('never falls back to the project image for the task hero', async () => {
+    stub([], '/tasks/21/image?v=taskphoto');
+    render(<MyTaskDetail
+        taskId={21}
+        project={{ id: 2, name: 'Ai for PT.Bukaka', image_url: '/projects/2/image?v=projectphoto' }}
+        navigate={vi.fn()}
+    />);
+
+    const hero = await screen.findByRole('img', { name: /Foto Final Recap Reimburse/ });
+    expect(hero).toHaveAttribute('src', '/tasks/21/image?v=taskphoto');
+    expect(hero).not.toHaveAttribute('src', '/projects/2/image?v=projectphoto');
 });
 
 it('shows "No file attached" when the task has no instruction files', async () => {

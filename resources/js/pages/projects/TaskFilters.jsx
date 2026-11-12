@@ -19,6 +19,40 @@ export const DEFAULT_TASK_FILTERS = {
     assignee: null,
 };
 
+/** Membaca filter dari query string agar bar di halaman detail bisa membuka daftar terfilter. */
+export function filtersFromQuery(params) {
+    const get = key => (params?.get ? params.get(key) : null);
+    const number = key => {
+        const raw = get(key);
+        const value = raw === null || raw === '' ? NaN : Number(raw);
+        return Number.isFinite(value) ? value : null;
+    };
+    return {
+        ...DEFAULT_TASK_FILTERS,
+        mine: get('mine') === '1',
+        createdBy: number('created_by'),
+        projectId: number('project'),
+        priority: get('priority') || null,
+        status: get('status') || null,
+        assignee: number('assignee'),
+    };
+}
+
+export function filtersToQuery(filters) {
+    const parts = [];
+    const push = (key, value) => {
+        if (value === null || value === undefined || value === '' || value === false) return;
+        parts.push(`${key}=${encodeURIComponent(value)}`);
+    };
+    push('mine', filters.mine ? '1' : null);
+    push('created_by', filters.createdBy);
+    push('project', filters.projectId);
+    push('priority', filters.priority);
+    push('status', filters.status);
+    push('assignee', filters.assignee);
+    return parts.join('&');
+}
+
 function assigneeIdsOf(task) {
     const ids = (task.assignees ?? []).map(person => person.id).filter(Boolean);
     if (task.assignee?.id) ids.push(task.assignee.id);
