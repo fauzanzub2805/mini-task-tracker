@@ -36,6 +36,8 @@ class TaskController extends Controller
         $query = Task::query()
             ->select('tasks.*')
             ->with(self::RELATIONS)
+            // Kartu Kanban menampilkan jumlah komentar per task.
+            ->withCount('comments')
             ->where('tasks.project_id', $project->id)
             ->when($request->filled('status'), fn ($q) => $q->where('tasks.status', $request->status))
             ->when($request->filled('priority_id'), fn ($q) => $q->where('tasks.priority_id', $request->priority_id))
@@ -126,7 +128,7 @@ class TaskController extends Controller
     {
         Gate::authorize('view', $task);
 
-        return new TaskResource($task->load(self::RELATIONS));
+        return new TaskResource($task->load(self::RELATIONS)->loadCount('comments'));
     }
 
     /**
@@ -143,7 +145,7 @@ class TaskController extends Controller
             return view('dashboard');
         }
 
-        return new TaskResource($task->load(self::RELATIONS));
+        return new TaskResource($task->load(self::RELATIONS)->loadCount('comments'));
     }
 
     public function update(UpdateTaskRequest $request, Task $task): TaskResource

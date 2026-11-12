@@ -9,10 +9,12 @@
         $page = match (true) {
             request()->routeIs('profile.messages') => 'messages',
             request()->routeIs('profile') => 'profile',
+            request()->routeIs('kanban') => 'kanban',
+            request()->routeIs('calendar') => 'calendar',
             request()->is('projects', 'projects/*') => 'projects',
             default => 'dashboard',
         };
-        $isAppPage = request()->routeIs('dashboard', 'profile', 'profile.messages') || $page === 'projects';
+        $isAppPage = request()->routeIs('dashboard', 'profile', 'profile.messages', 'kanban', 'calendar') || $page === 'projects';
         $account = $isAppPage ? request()->user() : null;
         $dashboardOptions = [
             'page' => $page,
@@ -26,6 +28,8 @@
             'messages' => 'Message',
             'profile' => 'Profile',
             'projects' => 'Projects',
+            'kanban' => 'Kanban Board',
+            'calendar' => 'Calendar',
             default => $account ? 'Dashboard' : 'Dashboard Preview',
         };
     @endphp

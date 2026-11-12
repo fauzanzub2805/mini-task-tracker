@@ -141,7 +141,7 @@ function PeopleMenu({ label, placeholder, options, value, emptyLabel, onSelect }
     </>;
 }
 
-export function TaskFilters({ filters, onChange, projects = [], priorities = [], users = [] }) {
+export function TaskFilters({ filters, onChange, projects = [], priorities = [], users = [], showStatus = true }) {
     const [open, setOpen] = useState(null);
     const barRef = useRef(null);
 
@@ -212,10 +212,10 @@ export function TaskFilters({ filters, onChange, projects = [], priorities = [],
             <OptionList options={priorityChoices} value={filters.priority} emptyLabel="Any Priority" onSelect={value => set('priority', value)} />
         </FilterMenu>
 
-        <FilterMenu id="status" open={open === 'status'} onOpen={setOpen}
+        {showStatus && <FilterMenu id="status" open={open === 'status'} onOpen={setOpen}
             label={filters.status ? statusLabel(filters.status) : 'Any Status'} active={Boolean(filters.status)}>
             <OptionList options={statusOptions} value={filters.status} emptyLabel="Any Status" onSelect={value => set('status', value)} />
-        </FilterMenu>
+        </FilterMenu>}
 
         <FilterMenu id="assignee" open={open === 'assignee'} onOpen={setOpen} chevron={false}
             label={assigneeName ?? 'Assigned to'} active={Boolean(filters.assignee)}>

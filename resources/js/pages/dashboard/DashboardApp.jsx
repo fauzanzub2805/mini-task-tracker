@@ -9,6 +9,7 @@ import { initials } from '../../lib/format.js';
 import { LogoutControl } from './LogoutControl.jsx';
 import { ProjectMonitoring } from './ProjectMonitoring.jsx';
 import { ProjectsPage } from '../projects/ProjectsPage.jsx';
+import { KanbanBoard } from '../kanban/KanbanBoard.jsx';
 import '../../../css/projects.css';
 
 const rows = [
@@ -40,6 +41,7 @@ export function DashboardApp({ user = null, notifications = [], page: initialPag
     const isDashboard = page === 'dashboard';
     const [expanded, setExpanded] = useState(page !== 'projects');
     const [profileExpanded, setProfileExpanded] = useState(page === 'profile' || page === 'messages');
+    const [calendarExpanded, setCalendarExpanded] = useState(page === 'calendar' || page === 'kanban');
     const [mobileOpen, setMobileOpen] = useState(false);
     const [active, setActive] = useState(() => window.location.hash === '#progress-table' ? 'progress-table' : 'ai-chatbot');
     const projectSection = () => {
@@ -72,6 +74,7 @@ export function DashboardApp({ user = null, notifications = [], page: initialPag
     useEffect(() => {
         setExpanded(page !== 'projects');
         setProfileExpanded(page === 'profile' || page === 'messages');
+        setCalendarExpanded(page === 'calendar' || page === 'kanban');
         setMobileOpen(false);
     }, [page]);
 
@@ -133,7 +136,11 @@ export function DashboardApp({ user = null, notifications = [], page: initialPag
                         onClick={closeMobile}
                     >{section[0].toUpperCase() + section.slice(1)}</a>)}
                 </div>}
-                <button className="dashboard-nav-item" disabled title="Calendar belum tersedia"><span aria-hidden="true">▦</span>Calendar<SidebarChevron /></button>
+                <button className="dashboard-nav-item" aria-expanded={calendarExpanded} aria-controls="calendar-sections" onClick={() => setCalendarExpanded(!calendarExpanded)}><span aria-hidden="true">▦</span> Calendar <SidebarChevron open={calendarExpanded} /></button>
+                {calendarExpanded && <div id="calendar-sections" className="dashboard-subnav">
+                    <a href="/calendar" aria-current={page === 'calendar' ? 'page' : undefined} onClick={closeMobile}>Calendar</a>
+                    <a href="/kanban" aria-current={page === 'kanban' ? 'page' : undefined} onClick={closeMobile}>Kanban Board</a>
+                </div>}
 
                 <button className="dashboard-nav-item" aria-expanded={profileExpanded} aria-controls="profile-sections" onClick={() => setProfileExpanded(!profileExpanded)}><span aria-hidden="true">♙</span> Profile <SidebarChevron open={profileExpanded} /></button>
                 {profileExpanded && <div id="profile-sections" className="dashboard-subnav">
@@ -155,6 +162,11 @@ export function DashboardApp({ user = null, notifications = [], page: initialPag
                 {page === 'messages' && <MessagePage user={user} onUnreadChange={setChatUnread} />}
                 {page === 'profile' && <ProfilePage user={user} />}
                 {page === 'projects' && <ProjectsPage user={user} />}
+                {page === 'kanban' && <KanbanBoard user={user} />}
+                {page === 'calendar' && <section className="kanban-placeholder" aria-labelledby="calendar-title">
+                    <h1 id="calendar-title">Calendar</h1>
+                    <p>Tampilan kalender bulanan akan tersedia di pembaruan berikutnya. Gunakan Kanban Board untuk memantau status task sekarang.</p>
+                </section>}
                 {page === 'dashboard' && <>
                     <div className="dashboard-demo" role="note">{user ? 'Monitoring terhubung dengan data project. AI Chatbot belum aktif.' : 'Preview dashboard — identitas dan tabel menggunakan data contoh. AI Chatbot belum aktif.'}</div>
                     <section id="ai-chatbot" className="dashboard-welcome" aria-labelledby="welcome-title"><h1 id="welcome-title">Welcome, {name.split(/\s+/)[0]}!</h1><p>Ask AI to see everything due today across all your projects here.</p><div className="dashboard-search"><div><input aria-label="AI Chatbot (belum tersedia)" placeholder="Type here to search task or make a new project & task..." disabled /><button disabled aria-label="Tambah lampiran belum tersedia">+</button></div><button disabled aria-label="Kirim ke AI belum tersedia">➤</button></div><img src="/images/login-illustration.png" alt="" className="dashboard-illustration" /></section>

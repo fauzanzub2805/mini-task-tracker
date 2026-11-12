@@ -4,6 +4,8 @@ export function appPage(path) {
     if (path === '/dashboard') return 'dashboard';
     if (path === '/profile') return 'profile';
     if (path === '/profile/messages') return 'messages';
+    if (path === '/kanban') return 'kanban';
+    if (path === '/calendar') return 'calendar';
     if (/^\/projects(?:\/\d+(?:\/tasks\/\d+)?)?\/?$/.test(path)) return 'projects';
     return null;
 }
@@ -42,7 +44,7 @@ export function useAppNavigation(initialPage) {
         };
     }, []);
     useEffect(() => {
-        const labels = { dashboard: 'Dashboard', projects: 'Projects', profile: 'Profile', messages: 'Message' };
+        const labels = { dashboard: 'Dashboard', projects: 'Projects', profile: 'Profile', messages: 'Message', kanban: 'Kanban Board', calendar: 'Calendar' };
         document.title = `${labels[route.page] ?? 'Dashboard'} · Rekayasa Task Tracker`;
         if (window.location.hash) document.getElementById(window.location.hash.slice(1))?.scrollIntoView?.();
         else window.scrollTo?.({ top: 0, behavior: 'instant' });

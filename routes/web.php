@@ -31,6 +31,8 @@ Route::post('/auth/login', [AuthController::class, 'login'])->middleware('thrott
 // Perlu login (guard web, session cookie)
 Route::middleware('auth')->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
+    Route::view('/calendar', 'dashboard')->name('calendar');
+    Route::view('/kanban', 'dashboard')->name('kanban');
     Route::view('/profile', 'dashboard')->name('profile');
     Route::view('/profile/messages', 'dashboard')->name('profile.messages');
     Route::post('/auth/logout', [AuthController::class, 'logout']);

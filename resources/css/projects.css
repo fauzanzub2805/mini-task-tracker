@@ -412,3 +412,37 @@
     .mytask-top, .mytask-grid { grid-template-columns: minmax(0, 1fr); }
 }
 .mytask-pill-date { background: #fff; font-weight: 700; }
+
+/* Kanban Board (Figma Kanban Page_12 Nov) */
+.kanban-page { display: grid; gap: 18px; }
+.kanban-heading h1 { margin: 0; font-size: clamp(24px, 2.4vw, 34px); font-weight: 700; color: #172237; }
+.kanban-scroll { overflow-x: auto; overscroll-behavior-x: contain; padding-bottom: 18px; }
+.kanban-board { display: flex; align-items: stretch; gap: 24px; min-height: clamp(520px, 62vh, 760px); }
+.kanban-column { display: flex; flex: 0 0 296px; flex-direction: column; padding: 16px; border-radius: 20px; background: #d4d9c9; transition: outline-color .12s ease; outline: 3px solid transparent; outline-offset: -8px; }
+.kanban-column.tone-progress { background: #e9c58a; }
+.kanban-column.tone-finish-dev { background: #adbede; }
+.kanban-column.tone-testing { background: #d9a9e8; }
+.kanban-column.tone-finished { background: #a9c8a8; }
+.kanban-column.is-over { outline-color: #ffffffd0; }
+.kanban-column-head { display: flex; align-items: center; gap: 10px; padding: 4px 4px 16px; }
+.kanban-column-head h2 { flex: 1; margin: 0; font-size: 18px; font-weight: 600; color: #172237; }
+.kanban-dot { flex-shrink: 0; width: 16px; height: 16px; border-radius: 50%; background: #b3bbaa; }
+.tone-progress .kanban-dot { background: #e0a030; }
+.tone-finish-dev .kanban-dot { background: #4a7cf7; }
+.tone-testing .kanban-dot { background: #a328e0; }
+.tone-finished .kanban-dot { background: #4a8a4a; }
+.kanban-count { font-size: 18px; font-weight: 600; color: #172237; }
+.kanban-column-body { display: grid; align-content: start; gap: 16px; }
+.kanban-card { padding: 16px 18px; border-radius: 16px; background: #e9edf6; color: #172237; cursor: grab; box-shadow: 0 1px 2px #1722370f; }
+.kanban-card:active { cursor: grabbing; }
+.kanban-card.is-dragging { opacity: .55; }
+.kanban-card h3 { margin: 0 0 14px; font-size: 17px; font-weight: 600; overflow-wrap: anywhere; }
+.kanban-card-meta { display: flex; align-items: center; gap: 10px; }
+.kanban-card-spacer { flex: 1; }
+.kanban-card-meta .projects-priority-pill { min-width: 74px; padding: 5px 16px; background: #fff; font-size: 13px; }
+.kanban-comments { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; color: #172237; }
+.kanban-avatar { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; background: #51607a; color: #fff; font-size: 12px; font-weight: 700; overflow: hidden; }
+.kanban-empty { margin: 8px 4px; font-size: 13px; color: #4b5563; }
+.kanban-placeholder { padding: 28px; background: #fff; border-radius: 16px; }
+.kanban-placeholder h1 { margin: 0 0 10px; font-size: 26px; }
+.kanban-placeholder p { margin: 0; color: #46536a; }

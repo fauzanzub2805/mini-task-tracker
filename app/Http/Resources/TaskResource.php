@@ -33,6 +33,8 @@ class TaskResource extends JsonResource
                 ->values()
                 ->all()),
             'attachments' => TaskAttachmentResource::collection($this->whenLoaded('attachments')),
+            // Jumlah komentar; dipakai kartu Kanban.
+            'comments_count' => (int) ($this->comments_count ?? 0),
             'creator' => $this->whenLoaded('creator', fn () => $this->creator ? [
                 'id' => $this->creator->id,
                 'name' => $this->creator->name,
