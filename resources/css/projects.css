@@ -370,11 +370,11 @@
 .mytask-field > span:first-child { display: block; margin-bottom: 10px; font-size: 17px; font-weight: 600; color: #172237; }
 .mytask-pill { display: flex; align-items: center; justify-content: center; width: 100%; padding: 9px 12px; border-radius: 999px; background: #dfe5ec; font-size: 15px; font-weight: 600; color: #172237; text-align: center; }
 .mytask-pill-inner { display: inline-flex; align-items: center; justify-content: center; min-width: 52%; padding: 7px 22px; border-radius: 6px; font-size: 15px; font-weight: 600; text-align: center; }
-.mytask-pill-project { background: #51607a; color: #fff; }
+.mytask-pill-project { border-radius: 999px; background: #51607a; color: #fff; }
 .mytask-pill-white { background: #fff; color: #172237; }
 .mytask-pill-date { border-radius: 999px; padding: 7px 34px; font-weight: 700; }
 .mytask-pill .projects-priority-pill { display: inline-flex; align-items: center; justify-content: center; min-width: 50%; padding: 5px 26px; background: #fff; font-size: 15px; text-align: center; }
-.mytask-pill .projects-status-badge { min-width: 46%; padding: 5px 22px; font-size: 15px; font-weight: 600; text-align: center; }
+.mytask-pill .projects-status-badge { min-width: 46%; padding: 5px 22px; border-radius: 999px; font-size: 15px; font-weight: 600; text-align: center; }
 .mytask-block { margin-bottom: 26px; }
 .mytask-block > h3 { margin: 0 0 10px; font-size: 17px; font-weight: 600; color: #172237; }
 .mytask-readonly { min-height: 150px; padding: 20px 24px; border-radius: 16px; background: #e2e8f0; font-size: 16px; color: #172237; white-space: pre-wrap; overflow-wrap: anywhere; }
