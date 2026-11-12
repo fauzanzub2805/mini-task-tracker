@@ -92,7 +92,7 @@ async function openMyTasks() {
 }
 
 function rows() {
-    return screen.queryAllByTestId('task-card').map(card => card.querySelector('h3').textContent);
+    return within(screen.getByRole('table')).getAllByRole('row').slice(1).map(row => row.querySelector('td a').textContent);
 }
 
 it('shows the task filter bar in Figma order on the My Tasks page', async () => {
@@ -229,20 +229,4 @@ it('shows the filter bar on the My Tasks detail page and opens the filtered list
 
     await screen.findByRole('heading', { name: 'My Tasks', level: 1 });
     await waitFor(() => expect(rows()).toEqual(['Fiksasi Tim']));
-});
-
-it('puts a Go to Task Details button at the bottom of each task card', async () => {
-    setup();
-    await openMyTasks();
-
-    const cards = screen.getAllByTestId('task-card');
-    expect(cards).toHaveLength(3);
-    cards.forEach(card => expect(within(card).getByRole('button', { name: 'Go to Task Details' })).toBeInTheDocument());
-
-    const push = vi.spyOn(window.history, 'pushState');
-    const card = cards.find(node => node.textContent.includes('Fiksasi Tim'));
-    fireEvent.click(within(card).getByRole('button', { name: 'Go to Task Details' }));
-
-    // Langsung ke tab Task Info (tanpa ?view=mytask).
-    expect(push).toHaveBeenCalledWith({}, '', '/projects/1/tasks/11');
 });
