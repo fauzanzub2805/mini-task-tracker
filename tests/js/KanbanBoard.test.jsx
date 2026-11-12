@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import '@testing-library/jest-dom/vitest';
 import { afterEach, expect, it, vi } from 'vitest';
 import { KanbanBoard } from '../../resources/js/pages/kanban/KanbanBoard.jsx';
+import { DashboardApp } from '../../resources/js/pages/dashboard/DashboardApp.jsx';
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
@@ -65,6 +66,10 @@ function setup() {
             case 'GET /users': return respond(paged(users));
             case 'GET /projects/1/tasks': return respond(paged(rows[1]));
             case 'GET /projects/2/tasks': return respond(paged(rows[2]));
+            case 'GET /projects/1': return respond({ data: projects[0] });
+            case 'GET /projects/1/members': return respond(paged([]));
+            case 'GET /projects/1/activities': return respond(paged([]));
+            case 'GET /tasks/11': return respond({ data: rows[1].find(row => row.id === 11) });
             default:
                 if (method === 'PATCH' && /^\/tasks\/\d+$/.test(path)) {
                     const id = Number(path.split('/').pop());
@@ -157,8 +162,7 @@ it('moves a card to another status when dropped and saves it', async () => {
     expect(screen.getByRole('region', { name: 'In Progress, 2 task' })).toBeInTheDocument();
 });
 
-it('filters cards by priority through the shared bar', async () => {
-    setup();
+it('filters cards by priority through the shared bar', async () => {    setup();
     await renderBoard();
 
     fireEvent.click(screen.getByRole('button', { name: /Any Priority/ }));
@@ -167,4 +171,16 @@ it('filters cards by priority through the shared bar', async () => {
     expect(screen.queryByLabelText('Task Revisi Fitur')).toBeNull();
     expect(screen.getByLabelText('Task Sinkronisasi Data')).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Open Task, 0 task' })).toBeInTheDocument();
+});
+
+it('opens the task detail page (My Tasks) when a card is clicked', async () => {
+    window.history.replaceState({}, '', '/kanban');
+    setup();
+    render(<DashboardApp user={{ id: 2, name: 'Dewi Anggraini', roles: ['staff'] }} page="kanban" />);
+
+    fireEvent.click(await screen.findByLabelText('Task Revisi Fitur'));
+
+    expect(await screen.findByRole('heading', { name: 'My Tasks → Revisi Fitur', level: 1 })).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/projects/1/tasks/11');
+    expect(window.location.search).toBe('?view=mytask');
 });

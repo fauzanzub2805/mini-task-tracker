@@ -434,6 +434,8 @@
 .kanban-count { font-size: 18px; font-weight: 600; color: #172237; }
 .kanban-column-body { display: grid; align-content: start; gap: 16px; }
 .kanban-card { padding: 16px 18px; border-radius: 16px; background: #e9edf6; color: #172237; cursor: grab; box-shadow: 0 1px 2px #1722370f; }
+.kanban-card:hover { box-shadow: 0 8px 18px #1722371f; }
+.kanban-card:focus-visible { outline: 2px solid #f13d31; outline-offset: 2px; }
 .kanban-card:active { cursor: grabbing; }
 .kanban-card.is-dragging { opacity: .55; }
 .kanban-card h3 { margin: 0 0 14px; font-size: 17px; font-weight: 600; overflow-wrap: anywhere; }

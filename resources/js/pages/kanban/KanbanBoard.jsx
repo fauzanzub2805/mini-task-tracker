@@ -18,7 +18,7 @@ function CommentIcon() {
     </svg>;
 }
 
-function TaskCard({ task, dragging, onDragStart, onDragEnd }) {
+function TaskCard({ task, dragging, onDragStart, onDragEnd, onOpen }) {
     const creator = task.creator?.name ?? '';
     const count = task.comments_count ?? 0;
 
@@ -27,6 +27,15 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }) {
         draggable
         onDragStart={event => onDragStart(event, task)}
         onDragEnd={onDragEnd}
+        onClick={() => onOpen(task)}
+        onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onOpen(task);
+            }
+        }}
+        role="link"
+        tabIndex={0}
         aria-label={`Task ${task.title}`}
     >
         <h3>{task.title}</h3>
@@ -143,6 +152,19 @@ export function KanbanBoard({ user = null }) {
         moveTask(rows.find(task => task.id === id), status);
     }
 
+    // Kartu task membuka halaman My Tasks task tersebut (detail task).
+    function openTask(task) {
+        if (!task?.id) return;
+        const projectId = task.project_id ?? task.project?.id;
+        const to = `/projects/${projectId}/tasks/${task.id}?view=mytask`;
+        if (typeof window !== 'undefined' && window.history?.pushState) {
+            window.history.pushState({}, '', to);
+            window.dispatchEvent(new Event('app:navigate'));
+            return;
+        }
+        window.location.assign(to);
+    }
+
     return <div className="kanban-page">
         <div className="kanban-heading">
             <h1>Kanban Board : Task Status Monitoring</h1>
@@ -190,6 +212,7 @@ export function KanbanBoard({ user = null }) {
                                 dragging={draggingId === task.id}
                                 onDragStart={onDragStart}
                                 onDragEnd={onDragEnd}
+                                onOpen={openTask}
                             />)}
                             {cards.length === 0 && <p className="kanban-empty">Belum ada task.</p>}
                         </div>
