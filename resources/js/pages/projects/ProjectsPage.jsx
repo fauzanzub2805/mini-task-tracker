@@ -217,18 +217,31 @@ function TasksOverview({ projects, priorities, users, user, query, params, navig
             {!loading && visibleRows.length === 0 && <p className="projects-empty">
                 {filtered || query ? 'Tidak ada task yang cocok dengan filter.' : 'Belum ada task.'}
             </p>}
-            {visibleRows.length > 0 && <div className="projects-table-scroll">
-                <table className="projects-table">
-                    <thead><tr>{['Task', 'Project', 'Assignee', 'Priority', 'Status'].map(label => <th key={label} scope="col">{label}</th>)}</tr></thead>
-                    <tbody>{visibleRows.map(task => <tr key={`${task.project.id}-${task.id}`}>
-                        <td><a href={`/projects/${task.project.id}/tasks/${task.id}?view=mytask`}>{task.title}</a></td>
-                        <td><a href={`/projects/${task.project.id}`}>{task.project.name}</a></td>
-                        <td>{task.assignees?.map(person => person.name).join(', ') || task.assignee?.name || 'Unassigned'}</td>
-                        <td><span className={`projects-priority-pill priority-${priorityKey(task.priority)}`}>{priorityLabel(task.priority)}</span></td>
-                        <td><span className={`projects-status-badge status-${statusClass(task.status)}`}>{statusLabel(task.status)}</span></td>
-                    </tr>)}</tbody>
-                </table>
-            </div>}
+            {visibleRows.length > 0 && <ul className="tasks-grid">
+                {visibleRows.map(task => <li key={`${task.project.id}-${task.id}`} className="task-card" data-testid="task-card">
+                    <h3>{task.title}</h3>
+                    <dl className="task-card-facts">
+                        <div>
+                            <dt>Project</dt>
+                            <dd><a href={`/projects/${task.project.id}`}>{task.project.name}</a></dd>
+                        </div>
+                        <div>
+                            <dt>Assignee</dt>
+                            <dd>{task.assignees?.map(person => person.name).join(', ') || task.assignee?.name || 'Unassigned'}</dd>
+                        </div>
+                    </dl>
+                    <div className="task-card-badges">
+                        <span className={`projects-priority-pill priority-${priorityKey(task.priority)}`}>{priorityLabel(task.priority)}</span>
+                        <span className={`projects-status-badge status-${statusClass(task.status)}`}>{statusLabel(task.status)}</span>
+                    </div>
+                    {/* Tombol di paling bawah kartu: langsung ke tab Task Info. */}
+                    <button
+                        type="button"
+                        className="projects-primary task-card-action"
+                        onClick={() => navigate(`/projects/${task.project.id}/tasks/${task.id}`)}
+                    >Go to Task Details</button>
+                </li>)}
+            </ul>}
         </div>
     </>;
 }
