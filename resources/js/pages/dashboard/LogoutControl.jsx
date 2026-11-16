@@ -5,7 +5,7 @@ import '../../../css/logout.css';
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /** Token CSRF dari meta tag Blade; form juga membawa _token untuk fallback tanpa JS. */
-function csrfToken() {
+export function csrfToken() {
     if (typeof document === 'undefined') {
         return '';
     }
@@ -14,47 +14,28 @@ function csrfToken() {
 }
 
 /**
- * Tombol Logout sidebar + dialog konfirmasi.
- *
- * Form tetap berupa POST form biasa ke /auth/logout (dengan _token) sehingga
- * tetap bekerja tanpa JavaScript. Saat JavaScript aktif, submit dicegat agar
- * status sibuk dan kegagalan dapat ditampilkan sebelum diarahkan ke /login.
+ * Dialog konfirmasi logout (portal ke body). Dipakai tombol Logout di sidebar
+ * maupun menu akun pada header, sehingga perilakunya identik di kedua tempat.
  */
-export function LogoutControl({ enabled = false, onLoggedOut }) {
-    const [open, setOpen] = useState(false);
+export function LogoutDialog({ open, onClose, onLoggedOut }) {
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
-    const trigger = useRef(null);
     const dialog = useRef(null);
     const cancelButton = useRef(null);
-    const wasOpen = useRef(false);
-
-    const redirect = useCallback(() => {
-        if (onLoggedOut) {
-            onLoggedOut();
-            return;
-        }
-
-        window.location.assign('/login');
-    }, [onLoggedOut]);
 
     const close = useCallback(() => {
-        setOpen(false);
+        onClose?.();
         setError('');
-    }, []);
+        setBusy(false);
+    }, [onClose]);
 
-    // Fokus awal ke Cancel (pilihan aman) dan kembalikan fokus ke trigger.
+    // Fokus awal ke Cancel (pilihan aman) setiap dialog dibuka.
     useEffect(() => {
-        if (open) {
-            wasOpen.current = true;
-            cancelButton.current?.focus();
-            return;
-        }
-
-        if (wasOpen.current) {
-            wasOpen.current = false;
-            trigger.current?.focus();
-        }
+        if (!open) return undefined;
+        setError('');
+        setBusy(false);
+        cancelButton.current?.focus();
+        return undefined;
     }, [open]);
 
     // Escape menutup dialog; Tab/Shift+Tab berputar di dalam dialog.
@@ -98,6 +79,15 @@ export function LogoutControl({ enabled = false, onLoggedOut }) {
         return () => document.removeEventListener('keydown', onKeyDown);
     }, [open, busy, close]);
 
+    function redirect() {
+        if (onLoggedOut) {
+            onLoggedOut();
+            return;
+        }
+
+        window.location.assign('/login');
+    }
+
     async function submit(event) {
         event.preventDefault();
 
@@ -137,7 +127,8 @@ export function LogoutControl({ enabled = false, onLoggedOut }) {
                 return;
             }
 
-            setOpen(false);
+            setBusy(false);
+            onClose?.();
             redirect();
         } catch {
             setBusy(false);
@@ -145,18 +136,101 @@ export function LogoutControl({ enabled = false, onLoggedOut }) {
         }
     }
 
+    if (!open) {
+        return null;
+    }
+
+    return createPortal(<div
+        className="logout-backdrop"
+        onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !busy) {
+                close();
+            }
+        }}
+    >
+        <div
+            ref={dialog}
+            className="logout-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="logout-dialog-title"
+            aria-describedby={error ? 'logout-dialog-error' : undefined}
+        >
+            <span className="logout-dialog-icon" aria-hidden="true">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 3 2.5 20h19L12 3Z" />
+                    <path d="M12 9v5" />
+                    <circle cx="12" cy="17" r=".6" fill="currentColor" />
+                </svg>
+            </span>
+
+            <h2 id="logout-dialog-title">You are about to Logout</h2>
+
+            {error && <p className="logout-dialog-error" id="logout-dialog-error" role="alert">{error}</p>}
+
+            <form className="logout-dialog-form" method="POST" action="/auth/logout" onSubmit={submit}>
+                <input type="hidden" name="_token" value={csrfToken()} readOnly />
+                <div className="logout-dialog-actions">
+                    <button
+                        ref={cancelButton}
+                        type="button"
+                        className="logout-button logout-button-cancel"
+                        disabled={busy}
+                        onClick={() => close()}
+                    >
+                        Cancel
+                    </button>
+                    <button type="submit" className="logout-button logout-button-confirm" disabled={busy}>
+                        {busy ? 'Logging out…' : 'Logout'}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>, document.body);
+}
+
+/**
+ * Tombol Logout sidebar + dialog konfirmasi.
+ *
+ * Form tetap berupa POST form biasa ke /auth/logout (dengan _token) sehingga
+ * tetap bekerja tanpa JavaScript. Saat JavaScript aktif, submit dicegat agar
+ * status sibuk dan kegagalan dapat ditampilkan sebelum diarahkan ke /login.
+ */
+export function LogoutControl({ enabled = false, onLoggedOut, variant = 'sidebar', onDialogOpen }) {
+    const [open, setOpen] = useState(false);
+    const trigger = useRef(null);
+    const wasOpen = useRef(false);
+
+    function close() {
+        setOpen(false);
+    }
+
+    // Kembalikan fokus ke trigger setelah dialog ditutup.
+    useEffect(() => {
+        if (open) {
+            wasOpen.current = true;
+            return;
+        }
+
+        if (wasOpen.current) {
+            wasOpen.current = false;
+            trigger.current?.focus();
+        }
+    }, [open]);
+
     return <>
         <button
             ref={trigger}
             type="button"
-            className="dashboard-nav-item dashboard-logout-trigger"
+            className={variant === 'menu' ? 'dashboard-account-menu-item dashboard-account-menu-logout' : 'dashboard-nav-item dashboard-logout-trigger'}
             disabled={!enabled}
+            role={variant === 'menu' ? 'menuitem' : undefined}
             aria-haspopup="dialog"
             aria-expanded={open}
             title={enabled ? 'Logout dari akun ini' : 'Logout tidak tersedia dalam preview'}
             onClick={() => {
-                setError('');
                 setOpen(true);
+                onDialogOpen?.();
             }}
         >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -167,52 +241,6 @@ export function LogoutControl({ enabled = false, onLoggedOut }) {
             Logout
         </button>
 
-        {open && createPortal(<div
-            className="logout-backdrop"
-            onMouseDown={(event) => {
-                if (event.target === event.currentTarget && !busy) {
-                    close();
-                }
-            }}
-        >
-            <div
-                ref={dialog}
-                className="logout-dialog"
-                role="alertdialog"
-                aria-modal="true"
-                aria-labelledby="logout-dialog-title"
-                aria-describedby={error ? 'logout-dialog-error' : undefined}
-            >
-                <span className="logout-dialog-icon" aria-hidden="true">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 3 2.5 20h19L12 3Z" />
-                        <path d="M12 9v5" />
-                        <circle cx="12" cy="17" r=".6" fill="currentColor" />
-                    </svg>
-                </span>
-
-                <h2 id="logout-dialog-title">You are about to Logout</h2>
-
-                {error && <p className="logout-dialog-error" id="logout-dialog-error" role="alert">{error}</p>}
-
-                <form className="logout-dialog-form" method="POST" action="/auth/logout" onSubmit={submit}>
-                    <input type="hidden" name="_token" value={csrfToken()} readOnly />
-                    <div className="logout-dialog-actions">
-                        <button
-                            ref={cancelButton}
-                            type="button"
-                            className="logout-button logout-button-cancel"
-                            disabled={busy}
-                            onClick={() => close()}
-                        >
-                            Cancel
-                        </button>
-                        <button type="submit" className="logout-button logout-button-confirm" disabled={busy}>
-                            {busy ? 'Logging out…' : 'Logout'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>, document.body)}
+        <LogoutDialog open={open} onClose={close} onLoggedOut={onLoggedOut} />
     </>;
 }

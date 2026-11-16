@@ -46,6 +46,15 @@ html:has(.dashboard-shell) { scroll-behavior: smooth; scroll-padding-top: 100px;
 .dashboard-account strong { font-size: 14px; }
 .dashboard-account small { font-size: 11px; color: #ffe3df; }
 .dashboard-avatar { display: grid; place-items: center; border-radius: 50%; width: 36px; height: 36px; background: #dedcff; color: #4338ca; }
+.dashboard-account-menu { position: relative; }
+.dashboard-avatar-button { border: 0; padding: 0; font-size: 14px; font-weight: 700; }
+.dashboard-avatar-button:hover, .dashboard-avatar-button[aria-expanded="true"] { background: #cfcbff; }
+.dashboard-account-dropdown { position: absolute; top: calc(100% + 10px); right: 0; z-index: 40; display: grid; gap: 4px; min-width: 190px; padding: 8px; border-radius: 12px; background: #fff; box-shadow: 0 16px 38px #17223726; }
+.dashboard-account-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 8px; background: transparent; color: #172237; font-size: 14px; font-weight: 500; text-align: left; text-decoration: none; }
+.dashboard-account-menu-item:hover { background: #eff4fc; }
+.dashboard-account-menu-item:disabled { opacity: .5; cursor: not-allowed; }
+.dashboard-account-menu-logout { color: #a3121f; }
+.dashboard-account-menu-logout svg { flex-shrink: 0; }
 .dashboard-menu-toggle { display: none; }
 .dashboard-content { max-width: 1600px; margin: auto; padding: 20px 46px 140px; }
 .dashboard-demo { width: fit-content; padding: 8px 12px; border: 1px dashed #a78f40; border-radius: 5px; color: #71612e; font-size: 12px; }
