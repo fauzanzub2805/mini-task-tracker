@@ -140,7 +140,7 @@ export function DashboardApp({ user = null, notifications = [], page: initialPag
                     <a href="/kanban" aria-current={page === 'kanban' ? 'page' : undefined} onClick={closeMobile}>Kanban Board</a>
                 </div>}
 
-                <a className="dashboard-nav-item" href="/profile/messages" aria-current={page === 'messages' ? 'page' : undefined} onClick={closeMobile}><span aria-hidden="true">✉</span> Message</a>
+                <a className="dashboard-nav-item" href="/profile/messages" aria-current={page === 'messages' ? 'page' : undefined} onClick={closeMobile}><span className="dashboard-nav-icon-lg" aria-hidden="true">✉</span> Message</a>
 
                 <button className="dashboard-nav-item" disabled title="Settings belum tersedia"><span aria-hidden="true">⚙</span>Settings<SidebarChevron /></button>
             </nav>
