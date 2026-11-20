@@ -40,7 +40,6 @@ export function DashboardApp({ user = null, notifications = [], page: initialPag
     const role = roleText(user);
     const isDashboard = page === 'dashboard';
     const [expanded, setExpanded] = useState(page !== 'projects');
-    const [profileExpanded, setProfileExpanded] = useState(page === 'profile' || page === 'messages');
     const [calendarExpanded, setCalendarExpanded] = useState(page === 'calendar' || page === 'kanban');
     const [mobileOpen, setMobileOpen] = useState(false);
     const [active, setActive] = useState(() => window.location.hash === '#progress-table' ? 'progress-table' : 'ai-chatbot');
@@ -73,7 +72,6 @@ export function DashboardApp({ user = null, notifications = [], page: initialPag
 
     useEffect(() => {
         setExpanded(page !== 'projects');
-        setProfileExpanded(page === 'profile' || page === 'messages');
         setCalendarExpanded(page === 'calendar' || page === 'kanban');
         setMobileOpen(false);
     }, [page]);
@@ -142,11 +140,7 @@ export function DashboardApp({ user = null, notifications = [], page: initialPag
                     <a href="/kanban" aria-current={page === 'kanban' ? 'page' : undefined} onClick={closeMobile}>Kanban Board</a>
                 </div>}
 
-                <button className="dashboard-nav-item" aria-expanded={profileExpanded} aria-controls="profile-sections" onClick={() => setProfileExpanded(!profileExpanded)}><span aria-hidden="true">♙</span> Profile <SidebarChevron open={profileExpanded} /></button>
-                {profileExpanded && <div id="profile-sections" className="dashboard-subnav">
-                    <a href="/profile" aria-current={page === 'profile' ? 'page' : undefined}>Profile</a>
-                    <a href="/profile/messages" aria-current={page === 'messages' ? 'page' : undefined}>Message</a>
-                </div>}
+                <a className="dashboard-nav-item" href="/profile/messages" aria-current={page === 'messages' ? 'page' : undefined} onClick={closeMobile}><span aria-hidden="true">✉</span> Message</a>
 
                 <button className="dashboard-nav-item" disabled title="Settings belum tersedia"><span aria-hidden="true">⚙</span>Settings<SidebarChevron /></button>
             </nav>

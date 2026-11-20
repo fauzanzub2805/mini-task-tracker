@@ -64,7 +64,7 @@ it('links both submenus to sections on the same page and supports collapse', () 
 
 it('uses bold sidebar chevrons pointing down only when the submenu is open', () => {
     render(<DashboardApp />);
-    for (const name of ['Dashboard', 'Profile']) {
+    for (const name of ['Dashboard']) {
         const toggle = screen.getByRole('button', { name });
         const icon = toggle.querySelector('svg.dashboard-chevron');
         expect(icon).toHaveAttribute('stroke-width', '3');
@@ -95,16 +95,16 @@ it('opens mobile navigation and closes it after section selection', () => {
     expect(screen.getByRole('link', { name: /Projects/ })).toHaveAttribute('href', '/projects');
 });
 
-it('navigates from the sidebar to Profile and Message and back to Dashboard', () => {
+it('shows a single Message item in the sidebar (Profile lives in the header menu) and navigates back to Dashboard', () => {
     vi.stubGlobal('fetch', vi.fn(() => json({ data: [], unread_count: 0 })));
     render(<DashboardApp user={user} page="profile" />);
 
-    const profile = screen.getByRole('link', { name: 'Profile' });
-    const message = screen.getByRole('link', { name: 'Message' });
-    expect(profile).toHaveAttribute('href', '/profile');
-    expect(profile).toHaveAttribute('aria-current', 'page');
+    const sidebar = screen.getByRole('complementary', { hidden: true });
+    const message = within(sidebar).getByRole('link', { name: 'Message' });
+    expect(within(sidebar).queryByRole('link', { name: 'Profile' })).toBeNull();
+    expect(within(sidebar).queryByRole('button', { name: 'Profile' })).toBeNull();
     expect(message).toHaveAttribute('href', '/profile/messages');
-    expect(message).not.toHaveClass('dashboard-subnav-pill');
+    expect(message).not.toHaveAttribute('aria-current');
     expect(screen.getByRole('link', { name: 'AI Chatbot' })).toHaveAttribute('href', '/dashboard#ai-chatbot');
     expect(screen.getByRole('link', { name: /Rekayasa/ })).toHaveAttribute('href', '/dashboard');
     expect(screen.getByRole('heading', { name: 'Profile', level: 1 })).toBeInTheDocument();

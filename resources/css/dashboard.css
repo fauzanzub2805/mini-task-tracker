@@ -12,6 +12,7 @@ html:has(.dashboard-shell) { scroll-behavior: smooth; scroll-padding-top: 100px;
 .dashboard-subnav a { padding: 6px 12px; border-radius: 4px; }
 .dashboard-subnav a:hover { background: #ffffff18; }
 #dashboard-sections [aria-current], #project-sections [aria-current], #profile-sections [aria-current], #calendar-sections [aria-current] { background: #e88400; color: #fff; }
+.dashboard-nav-item[aria-current] { background: #e88400; color: #fff; }
 .dashboard-nav-note { font-size: 12px; opacity: .8; margin: 20px 10px; }
 .dashboard-shell button:disabled { cursor: not-allowed; }
 .dashboard-shell button:not(:disabled) { cursor: pointer; }
