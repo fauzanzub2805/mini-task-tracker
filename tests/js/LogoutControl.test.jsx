@@ -35,17 +35,12 @@ it('renders Logout below Settings and disables it without an authenticated user'
     expect(screen.queryByRole('alertdialog')).toBeNull();
 });
 
-it('places Logout directly below Settings in the sidebar and enables it for a real user', () => {
-    const { unmount } = render(<DashboardApp />);
-    expect(screen.getByRole('button', { name: 'Logout' })).toBeDisabled();
-    unmount();
-
+it('does not render Logout in the sidebar; it is only reachable from the header account menu', () => {
     render(<DashboardApp user={{ name: 'Dewi Lestari', roles: ['staff'] }} />);
-    const settings = screen.getByRole('button', { name: /Settings/ });
-    const logout = screen.getByRole('button', { name: 'Logout' });
+    const sidebar = screen.getByRole('complementary', { hidden: true });
 
-    expect(logout).toBeEnabled();
-    expect(settings.compareDocumentPosition(logout) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(sidebar).queryByRole('button', { name: 'Logout' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Buka menu akun' })).toBeInTheDocument();
 });
 
 it('opens the exact confirmation dialog with Cancel focused and no subtitle', () => {
