@@ -18,9 +18,23 @@ function CommentIcon() {
     </svg>;
 }
 
+// Assignee yang benar-benar ditugaskan (multi-assignee, fallback kolom lama).
+function taskAssignees(task) {
+    const people = task.assignees?.length ? task.assignees : task.assignee ? [task.assignee] : [];
+    return people.filter(person => person?.name);
+}
+
+// Maksimal 2 avatar tampil; sisanya diringkas jadi "+N".
+const AVATAR_LIMIT = 2;
+
 function TaskCard({ task, dragging, onDragStart, onDragEnd, onOpen }) {
-    const creator = task.creator?.name ?? '';
     const count = task.comments_count ?? 0;
+    const assignees = taskAssignees(task);
+    const shown = assignees.slice(0, AVATAR_LIMIT);
+    const extra = assignees.length - shown.length;
+    const assigneeLabel = assignees.length
+        ? `Ditugaskan ke ${assignees.map(person => person.name).join(', ')}`
+        : 'Belum ditugaskan';
 
     return <article
         className={`kanban-card${dragging ? ' is-dragging' : ''}`}
@@ -45,7 +59,18 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd, onOpen }) {
             <span className="kanban-comments" aria-label={`${count} komentar`}>
                 <CommentIcon /><span aria-hidden="true">{count}</span>
             </span>
-            <span className="kanban-avatar" title={creator || 'Pembuat task'} aria-hidden="true">{initials(creator) || '?'}</span>
+            <span className={`kanban-assignees${assignees.length ? '' : ' is-unassigned'}`} title={assigneeLabel}>
+                {assignees.length
+                    ? shown.map((person, index) => <span
+                        key={person.id ?? person.name ?? index}
+                        className="kanban-avatar"
+                        style={{ zIndex: shown.length - index }}
+                        aria-hidden="true"
+                    >{initials(person.name)}</span>)
+                    : <span className="kanban-avatar" aria-hidden="true">?</span>}
+                {extra > 0 && <span className="kanban-avatar kanban-avatar-more" style={{ zIndex: 0 }} aria-hidden="true">{`+${extra}`}</span>}
+                <span className="sr-only">{assigneeLabel}</span>
+            </span>
         </div>
     </article>;
 }

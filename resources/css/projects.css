@@ -443,7 +443,13 @@
 .kanban-card-spacer { flex: 1; }
 .kanban-card-meta .projects-priority-pill { min-width: 74px; padding: 5px 16px; background: #fff; font-size: 13px; }
 .kanban-comments { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; color: #172237; }
+.kanban-assignees { display: inline-flex; align-items: center; flex-shrink: 0; }
 .kanban-avatar { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; background: #51607a; color: #fff; font-size: 12px; font-weight: 700; overflow: hidden; }
+/* Avatar bertumpuk saat task punya lebih dari satu assignee; position agar z-index inline berlaku. */
+.kanban-assignees .kanban-avatar { position: relative; }
+.kanban-assignees .kanban-avatar + .kanban-avatar { margin-left: -12px; box-shadow: 0 0 0 2px #e9edf6; }
+.kanban-avatar-more { background: #7d8aa1; font-size: 11px; }
+.kanban-assignees.is-unassigned .kanban-avatar { background: #eef1f7; color: #7d8aa1; box-shadow: inset 0 0 0 1.5px #b9c2d2; }
 .kanban-empty { margin: 8px 4px; font-size: 13px; color: #4b5563; }
 .kanban-placeholder { padding: 28px; background: #fff; border-radius: 16px; }
 .kanban-placeholder h1 { margin: 0 0 10px; font-size: 26px; }

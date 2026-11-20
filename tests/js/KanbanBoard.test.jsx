@@ -50,12 +50,12 @@ function respond(payload, status = 200) {
 
 const paged = rows => ({ data: rows, links: { next: null } });
 
-function setup() {
+function setup(overrides = {}) {
     const state = { patches: [] };
     // Salinan data agar PATCH benar-benar mengubah status yang dikembalikan server.
     const rows = {
-        1: tasksByProject[1].map(row => ({ ...row })),
-        2: tasksByProject[2].map(row => ({ ...row })),
+        1: (overrides.project1 ?? tasksByProject[1]).map(row => ({ ...row })),
+        2: (overrides.project2 ?? tasksByProject[2]).map(row => ({ ...row })),
     };
     const fetchMock = vi.fn((url, options = {}) => {
         const method = (options.method ?? 'GET').toUpperCase();
@@ -97,9 +97,9 @@ function transfer() {
     };
 }
 
-async function renderBoard() {
+async function renderBoard(waitForText = 'Revisi Fitur') {
     render(<KanbanBoard user={{ id: 2, name: 'Dewi Anggraini', roles: ['staff'] }} />);
-    await screen.findByText('Revisi Fitur');
+    await screen.findByText(waitForText);
 }
 
 it('renders the five status columns in order with task counts', async () => {
@@ -128,16 +128,59 @@ it('shows the shared filter bar without Any Status', async () => {
     expect(within(bar).queryByText('Any Status')).toBeNull();
 });
 
-it('shows priority, comment count and the creator avatar on each card', async () => {
+it('shows priority, comment count and the assignee avatar on each card', async () => {
     setup();
     await renderBoard();
 
     const card = screen.getByLabelText('Task Revisi Fitur');
     expect(within(card).getByText('High')).toBeInTheDocument();
     expect(within(card).getByLabelText('2 komentar')).toBeInTheDocument();
-    // Avatar memakai inisial pembuat task (Project Manager) karena user belum punya foto.
+    // Avatar memakai inisial orang yang ditugaskan, bukan Project Manager pembuat task.
+    expect(within(card).getByText('DA')).toBeInTheDocument();
+    expect(within(card).getByTitle('Ditugaskan ke Dewi Anggraini')).toBeInTheDocument();
+    expect(within(card).queryByText('FF')).toBeNull();
+});
+
+it('stacks assignee avatars and summarises the rest with +N', async () => {
+    setup({
+        project1: [
+            task({
+                id: 13,
+                title: 'Integrasi Pembayaran',
+                status: 'todo',
+                assignee_id: 2,
+                assignee: { id: 2, name: 'Dewi Anggraini' },
+                assignees: [
+                    { id: 2, name: 'Dewi Anggraini' },
+                    { id: 1, name: 'Fulan bin Fulan' },
+                    { id: 3, name: 'Budi Santoso' },
+                ],
+            }),
+        ],
+        project2: [],
+    });
+    await renderBoard('Integrasi Pembayaran');
+
+    const card = screen.getByLabelText('Task Integrasi Pembayaran');
+    // Dua assignee pertama tampil sebagai inisial, sisanya jadi "+1".
+    expect(within(card).getByText('DA')).toBeInTheDocument();
     expect(within(card).getByText('FF')).toBeInTheDocument();
-    expect(within(card).getByTitle('Fulan bin Fulan')).toBeInTheDocument();
+    expect(within(card).getByText('+1')).toBeInTheDocument();
+    expect(within(card).getByTitle('Ditugaskan ke Dewi Anggraini, Fulan bin Fulan, Budi Santoso')).toBeInTheDocument();
+});
+
+it('marks cards without an assignee instead of falling back to the creator', async () => {
+    setup({
+        project1: [task({ id: 14, title: 'Task Tanpa Assignee', status: 'todo', assignee_id: null, assignee: null, assignees: [] })],
+        project2: [],
+    });
+    await renderBoard('Task Tanpa Assignee');
+
+    const card = screen.getByLabelText('Task Task Tanpa Assignee');
+    expect(within(card).getByTitle('Belum ditugaskan')).toBeInTheDocument();
+    expect(within(card).getByText('?')).toBeInTheDocument();
+    // Inisial Project Manager (pembuat task) tidak lagi dipakai sebagai avatar.
+    expect(within(card).queryByText('FF')).toBeNull();
 });
 
 it('moves a card to another status when dropped and saves it', async () => {
