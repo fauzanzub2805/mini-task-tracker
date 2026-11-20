@@ -140,7 +140,7 @@ export function DashboardApp({ user = null, notifications = [], page: initialPag
                     <a href="/kanban" aria-current={page === 'kanban' ? 'page' : undefined} onClick={closeMobile}>Kanban Board</a>
                 </div>}
 
-                <a className="dashboard-nav-item" href="/profile/messages" aria-current={page === 'messages' ? 'page' : undefined} onClick={closeMobile}><span className="dashboard-nav-icon-lg" aria-hidden="true">✉</span> Message</a>
+                <a className="dashboard-nav-item" href="/profile/messages" aria-current={page === 'messages' ? 'page' : undefined} onClick={closeMobile}><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6.2 3H13.8a3.2 3.2 0 0 1 3.2 3.2V10.3a3.2 3.2 0 0 1-3.2 3.2H9.6L6.6 17 6.2 13.5a3.2 3.2 0 0 1-3.2-3.2V6.2A3.2 3.2 0 0 1 6.2 3Z" /><path d="M17 7H17.9a3.1 3.1 0 0 1 3.1 3.1V13.3a3.1 3.1 0 0 1-3.1 3.1H17.8L18.3 20 15.3 16.4H7.1" /><circle cx="7" cy="8.25" r=".9" fill="currentColor" stroke="none" /><circle cx="10" cy="8.25" r=".9" fill="currentColor" stroke="none" /><circle cx="13" cy="8.25" r=".9" fill="currentColor" stroke="none" /></svg> Message</a>
 
                 <button className="dashboard-nav-item" disabled title="Settings belum tersedia"><span aria-hidden="true">⚙</span>Settings<SidebarChevron /></button>
             </nav>
