@@ -76,7 +76,7 @@ export function filterTasks(rows, filters, currentUserId, term = '') {
 }
 
 /** Dropdown generik: daftar tombol pilihan dengan panel yang bisa ditutup. */
-function FilterMenu({ id, open, onOpen, label, chevron = true, active = false, children }) {
+export function FilterMenu({ id, open, onOpen, label, chevron = true, active = false, children }) {
     return <div className="task-filter">
         <button
             type="button"
@@ -93,7 +93,7 @@ function FilterMenu({ id, open, onOpen, label, chevron = true, active = false, c
     </div>;
 }
 
-function OptionList({ options, value, emptyLabel, onSelect }) {
+export function OptionList({ options, value, emptyLabel, onSelect }) {
     return <ul className="task-filter-options" role="listbox">
         {emptyLabel && <li>
             <button type="button" role="option" aria-selected={value === null} onClick={() => onSelect(null)}>
