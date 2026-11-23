@@ -28,6 +28,16 @@ function SidebarChevron({ open = false }) {
     return <svg className={`dashboard-chevron${open ? ' is-open' : ''}`} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7" /></svg>;
 }
 
+// Ikon gulungan cetak biru berisi grafik tren naik; ukuran dan gaya garis sama dengan ikon sidebar lain.
+function DashboardIcon() {
+    return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+        <path d="M3 17.4V5.7a3 3 0 0 1 6 0V17.4Z" fill="currentColor" />
+        <path d="M3 17.4V18.3a2.3 2.3 0 0 0 2.3 2.3H21.5V5.4H11.2M9 17.4H5.8a1.6 1.6 0 0 0 0 3.2" />
+        <path d="M11.4 13.9 13.8 11.4l2 2 2.4-2.4M11.4 17H19.4" />
+        <path d="M19.8 9.3 16.6 10.1 19 12.5Z" fill="currentColor" strokeWidth="1" />
+    </svg>;
+}
+
 // Ikon folder dengan penggaris dan pensil bersilang; ukuran dan gaya garis sama dengan ikon sidebar lain.
 // Mask memberi celah di folder dan penggaris tempat alat-alat itu menimpanya.
 function ProjectsIcon() {
@@ -158,7 +168,7 @@ export function DashboardApp({ user = null, notifications = [], page: initialPag
         <aside className={`dashboard-sidebar ${mobileOpen ? 'is-open' : ''}`} id="dashboard-sidebar" aria-label="Navigasi utama">
             <a className="dashboard-brand" href="/dashboard" onClick={closeMobile}><span aria-hidden="true">▥</span><div><strong>Rekayasa</strong><small>Task Tracker</small></div></a>
             <nav>
-                <button className="dashboard-nav-item" aria-expanded={expanded} aria-controls="dashboard-sections" onClick={() => setExpanded(!expanded)}><span aria-hidden="true">▦</span> Dashboard <SidebarChevron open={expanded} /></button>
+                <button className="dashboard-nav-item" aria-expanded={expanded} aria-controls="dashboard-sections" onClick={() => setExpanded(!expanded)}><DashboardIcon />Dashboard<SidebarChevron open={expanded} /></button>
                 {expanded && <div id="dashboard-sections" className="dashboard-subnav">
                     <a href={isDashboard ? '#ai-chatbot' : '/dashboard#ai-chatbot'} aria-current={isDashboard && active === 'ai-chatbot' ? 'location' : undefined} onClick={() => navigate('ai-chatbot')}>AI Chatbot</a>
                     <a href={isDashboard ? '#progress-table' : '/dashboard#progress-table'} aria-current={isDashboard && active === 'progress-table' ? 'location' : undefined} onClick={() => navigate('progress-table')}>Progress Table</a>
