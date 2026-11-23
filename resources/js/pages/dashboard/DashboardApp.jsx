@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { useAppNavigation } from '../../lib/useAppNavigation.js';
 import { HeaderInbox } from './HeaderInbox.jsx';
 import { LiveHeaderInbox } from './LiveHeaderInbox.jsx';
@@ -26,6 +26,42 @@ const roleLabels = { admin: 'Admin', manager: 'Manager', staff: 'Staff' };
 
 function SidebarChevron({ open = false }) {
     return <svg className={`dashboard-chevron${open ? ' is-open' : ''}`} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="m9 5 7 7-7 7" /></svg>;
+}
+
+// Ikon folder dengan penggaris dan pensil bersilang; ukuran dan gaya garis sama dengan ikon sidebar lain.
+// Mask memberi celah di folder dan penggaris tempat alat-alat itu menimpanya.
+function ProjectsIcon() {
+    const id = useId();
+    const pencilCut = `${id}-pencil`;
+    const toolsCut = `${id}-tools`;
+    const pencil = 'M9 16.5 12 14.9H22.2V18.1H12Z';
+    const pencilMask = <path d={pencil} transform="rotate(-45 16 16.5)" fill="#000" stroke="#000" strokeWidth="2.6" />;
+
+    return <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+        <defs>
+            <mask id={pencilCut} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+                <rect width="24" height="24" fill="#fff" stroke="none" />{pencilMask}
+            </mask>
+            <mask id={toolsCut} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+                <rect width="24" height="24" fill="#fff" stroke="none" />{pencilMask}
+                <rect x="9.4" y="14.8" width="13.2" height="3.4" transform="rotate(45 16 16.5)" fill="#000" stroke="#000" strokeWidth="2.6" />
+            </mask>
+        </defs>
+        <g mask={`url(#${toolsCut})`}>
+            <path d="M2.5 19.5V4.6a1 1 0 0 1 1-1H9l2 2h9.5a1 1 0 0 1 1 1V19.5H2.5Z" />
+            <path d="M2.5 8.2H21.5M5.2 11.4H9.4M5.2 14.2H9.8M5.2 17H8.4" />
+        </g>
+        <g mask={`url(#${pencilCut})`}>
+            <g transform="rotate(45 16 16.5)">
+                <rect x="9.5" y="14.9" width="13" height="3.2" rx=".4" />
+                <path d="M11.5 14.9v1.4M13.5 14.9v.9M15.5 14.9v1.4M17.5 14.9v.9M19.5 14.9v1.4" strokeWidth="1.2" />
+            </g>
+        </g>
+        <g transform="rotate(-45 16 16.5)">
+            <path d={pencil} />
+            <path d="M12 14.9V18.1M20.3 14.9V18.1" strokeWidth="1.3" />
+        </g>
+    </svg>;
 }
 
 function roleText(user) {
@@ -127,7 +163,7 @@ export function DashboardApp({ user = null, notifications = [], page: initialPag
                     <a href={isDashboard ? '#ai-chatbot' : '/dashboard#ai-chatbot'} aria-current={isDashboard && active === 'ai-chatbot' ? 'location' : undefined} onClick={() => navigate('ai-chatbot')}>AI Chatbot</a>
                     <a href={isDashboard ? '#progress-table' : '/dashboard#progress-table'} aria-current={isDashboard && active === 'progress-table' ? 'location' : undefined} onClick={() => navigate('progress-table')}>Progress Table</a>
                 </div>}
-                <a className="dashboard-nav-item" href="/projects" aria-current={page === 'projects' ? 'page' : undefined}><span aria-hidden="true">☷</span>Projects<SidebarChevron open={page === 'projects'} /></a>
+                <a className="dashboard-nav-item" href="/projects"><ProjectsIcon />Projects<SidebarChevron open={page === 'projects'} /></a>
                 {page === 'projects' && <div id="project-sections" className="dashboard-subnav">
                     {['projects', 'tasks', 'teams'].map(section => <a key={section}
                         href={section === 'projects' ? '/projects' : `/projects?view=${section}`}

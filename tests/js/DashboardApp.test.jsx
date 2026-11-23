@@ -13,6 +13,8 @@ it('tracks the active project submenu across query, detail and history navigatio
     window.history.replaceState({}, '', '/projects?view=teams');
     render(<DashboardApp page="projects" />);
     const menu = within(document.getElementById('project-sections'));
+    // Header grup Projects tetap merah seperti Dashboard/Calendar; hanya submenu yang disorot.
+    expect(document.querySelector('.dashboard-nav-item[href="/projects"]')).not.toHaveAttribute('aria-current');
     expect(menu.getByRole('link', { name: 'Teams' })).toHaveAttribute('aria-current', 'page');
     expect(menu.getByRole('link', { name: 'Projects' })).not.toHaveAttribute('aria-current');
     window.history.pushState({}, '', '/projects/1/tasks/2');
