@@ -235,9 +235,27 @@ export function formatFileSize(bytes) {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// Kanal antar-tab: perubahan di satu tab langsung menyegarkan dashboard/Kanban
+// yang terbuka di tab lain pada browser yang sama, tanpa menunggu polling.
+let changeChannel = null;
+if (typeof window !== 'undefined' && typeof BroadcastChannel === 'function') {
+    try {
+        changeChannel = new BroadcastChannel('rekayasa:projects-changed');
+        changeChannel.unref?.(); // Node (pengujian): jangan menahan proses tetap hidup.
+        changeChannel.addEventListener('message', () => window.dispatchEvent(new Event('projects:changed')));
+    } catch {
+        changeChannel = null;
+    }
+}
+
 /** Menyebarkan perubahan agar dashboard "On going Projects & Tasks" ikut memperbarui diri. */
 export function notifyProjectsChanged() {
     if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
         window.dispatchEvent(new Event('projects:changed'));
+    }
+    try {
+        changeChannel?.postMessage('changed');
+    } catch {
+        // Kanal opsional: tab lain tetap tersinkron lewat polling.
     }
 }

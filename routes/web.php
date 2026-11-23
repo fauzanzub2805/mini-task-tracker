@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CommentAttachmentController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DirectMessageController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\LoginPageController;
@@ -31,6 +32,8 @@ Route::post('/auth/login', [AuthController::class, 'login'])->middleware('thrott
 // Perlu login (guard web, session cookie)
 Route::middleware('auth')->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
+    // Ringkasan angka + daftar task dashboard dalam satu snapshot (mendukung ETag/304).
+    Route::get('/dashboard/monitoring', [DashboardController::class, 'monitoring'])->name('dashboard.monitoring');
     Route::view('/calendar', 'dashboard')->name('calendar');
     Route::view('/kanban', 'dashboard')->name('kanban');
     Route::view('/profile', 'dashboard')->name('profile');

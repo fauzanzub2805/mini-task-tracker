@@ -88,8 +88,11 @@ html:has(.dashboard-shell) { scroll-behavior: smooth; scroll-padding-top: 100px;
 .dashboard-table-card td { padding: 14px; border-bottom: 1px solid #dce3ee; font-size: 13px; }
 .dashboard-table-card tr:last-child td { border-bottom: 0; }
 .dashboard-task { display: flex; align-items: center; gap: 10px; }
-.task-dot { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; background: #2999f3; }
-.task-dot-0 { display: grid; place-items: center; background: #eff1f4; color: #4285f4; font-size: 23px; font-weight: 700; }
+.dashboard-live { display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: #009c6a; box-shadow: 0 0 0 3px #009c6a26; vertical-align: 1px; }
+.dashboard-live.is-offline { background: #d76c00; box-shadow: 0 0 0 3px #d76c0026; }
+.dashboard-stat strong { font-variant-numeric: tabular-nums; line-height: 1.2; }
+.task-dot { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; background: #2999f3; color: white; font-size: 15px; font-weight: 600; line-height: 1; text-transform: uppercase; }
+.task-dot-0 { background: #eff1f4; color: #4285f4; font-size: 23px; font-weight: 700; }
 .task-dot-2 { background: #20272a; }.task-dot-3 { background: #43c0ff; }.task-dot-4 { background: #315fd1; }
 .dashboard-badge { display: inline-block; min-width: 90px; text-align: center; padding: 7px 10px; border-radius: 6px; color: white; font-size: 12px; }
 .dashboard-badge.open-task { background: #777e86; }.dashboard-badge.in-progress { background: #d76c00; }.dashboard-badge.finished { background: #009c6a; }.dashboard-badge.testing { background: #a500ef; }.dashboard-badge.finish-dev { background: #195cff; }
