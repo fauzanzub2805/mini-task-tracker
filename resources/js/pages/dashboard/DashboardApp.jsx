@@ -10,6 +10,7 @@ import { AccountMenu } from './AccountMenu.jsx';
 import { ProjectMonitoring } from './ProjectMonitoring.jsx';
 import { ProjectsPage } from '../projects/ProjectsPage.jsx';
 import { KanbanBoard } from '../kanban/KanbanBoard.jsx';
+import { GanttCalendar } from '../calendar/GanttCalendar.jsx';
 import '../../../css/projects.css';
 
 const rows = [
@@ -156,10 +157,7 @@ export function DashboardApp({ user = null, notifications = [], page: initialPag
                 {page === 'profile' && <ProfilePage user={user} />}
                 {page === 'projects' && <ProjectsPage user={user} />}
                 {page === 'kanban' && <KanbanBoard user={user} />}
-                {page === 'calendar' && <section className="kanban-placeholder" aria-labelledby="calendar-title">
-                    <h1 id="calendar-title">Calendar</h1>
-                    <p>Tampilan kalender bulanan akan tersedia di pembaruan berikutnya. Gunakan Kanban Board untuk memantau status task sekarang.</p>
-                </section>}
+                {page === 'calendar' && <GanttCalendar />}
                 {page === 'dashboard' && <>
                     <div className="dashboard-demo" role="note">{user ? 'Monitoring terhubung dengan data project. AI Chatbot belum aktif.' : 'Preview dashboard — identitas dan tabel menggunakan data contoh. AI Chatbot belum aktif.'}</div>
                     <section id="ai-chatbot" className="dashboard-welcome" aria-labelledby="welcome-title"><h1 id="welcome-title">Welcome, {name.split(/\s+/)[0]}!</h1><p>Ask AI to see everything due today across all your projects here.</p><div className="dashboard-search"><div><input aria-label="AI Chatbot (belum tersedia)" placeholder="Type here to search task or make a new project & task..." disabled /><button disabled aria-label="Tambah lampiran belum tersedia">+</button></div><button disabled aria-label="Kirim ke AI belum tersedia">➤</button></div><img src="/images/login-illustration.png" alt="" className="dashboard-illustration" /></section>
